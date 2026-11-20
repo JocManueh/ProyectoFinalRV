@@ -464,9 +464,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4750534417141307047, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7381641111824694991, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_Name
       value: XR Origin (VR) 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8321179467791629534, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
