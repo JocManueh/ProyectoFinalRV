@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.XR.Simulation::UnityEngine.XR.Simulation.XRSimulationRuntimeSettings
   m_EnvironmentLayer: 30
   m_EnvironmentScanParams:
-    m_MinimumRescanTime: 0.1
+    m_MinimumRescanTime: 0.008333334
     m_DeltaCameraDistanceToRescan: 0.025
     m_DeltaCameraAngleToRescan: 4
     m_RaysPerCast: 10
