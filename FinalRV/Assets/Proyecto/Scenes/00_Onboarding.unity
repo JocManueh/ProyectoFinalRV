@@ -1520,10 +1520,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 496310845258286124, guid: 18dab97d8872f374d82878fb014f0bb2, type: 3}
-      propertyPath: m_text
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 2839296614764669686, guid: 18dab97d8872f374d82878fb014f0bb2, type: 3}
       propertyPath: m_Name
       value: Nova
@@ -1567,22 +1563,6 @@ PrefabInstance:
     - target: {fileID: 4216103791239144396, guid: 18dab97d8872f374d82878fb014f0bb2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7242103502819226451, guid: 18dab97d8872f374d82878fb014f0bb2, type: 3}
-      propertyPath: m_Color.a
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7242103502819226451, guid: 18dab97d8872f374d82878fb014f0bb2, type: 3}
-      propertyPath: m_Color.b
-      value: 0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7242103502819226451, guid: 18dab97d8872f374d82878fb014f0bb2, type: 3}
-      propertyPath: m_Color.g
-      value: 0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7242103502819226451, guid: 18dab97d8872f374d82878fb014f0bb2, type: 3}
-      propertyPath: m_Color.r
-      value: 0.1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
