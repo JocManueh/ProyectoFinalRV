@@ -9,10 +9,12 @@ public class InputHintUI : MonoBehaviour
     {
         [TextArea] public string gafas;
         [TextArea] public string simulador;
+            [SerializeField] HologramaControles holograma;
     }
 
     [SerializeField] TMP_Text texto;
     [SerializeField] Pista[] pistas;
+    [SerializeField] HologramaControles holograma;
 
     public static bool HayGafas => XRSettings.isDeviceActive;
 
@@ -35,12 +37,14 @@ public class InputHintUI : MonoBehaviour
     public void Mostrar(int indice)
     {
         actual = indice;
+                if (holograma != null) holograma.Apagar();
         Refrescar();
     }
 
     public void Ocultar()
     {
         actual = -1;
+                if (holograma != null) holograma.Apagar();
         if (texto != null) texto.text = "";
     }
 
