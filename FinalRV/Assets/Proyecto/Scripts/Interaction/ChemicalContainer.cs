@@ -21,7 +21,14 @@ public class ChemicalContainer : MonoBehaviour
     public void Refrescar()
     {
         if (liquidoRenderer != null)
-            liquidoRenderer.material.color = EstaVacia ? colorVacio : sustancia.color;
+        {
+            // Usar sharedMaterial en edit mode para evitar leaks
+            var mat = Application.isPlaying
+                ? liquidoRenderer.material
+                : liquidoRenderer.sharedMaterial;
+            if (mat != null)
+                mat.color = EstaVacia ? colorVacio : sustancia.color;
+        }
 
         if (etiqueta != null)
             etiqueta.text = EstaVacia ? "VACÍO" : $"{sustancia.displayName}\n{volumen} ml";
