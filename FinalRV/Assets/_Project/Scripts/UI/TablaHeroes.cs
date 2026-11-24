@@ -68,12 +68,12 @@ public class TablaHeroes : MonoBehaviour
 
     void ActualizarTextoPistas()
     {
+        // txtPistas es opcional (resumen acumulador); cada pista tiene su propio TMP.
         if (txtPistas == null) return;
         var sb = new System.Text.StringBuilder("PISTAS:\n");
         foreach (var p in pistasRevelables)
         {
             if (p == null) continue;
-            // Usa el texto real guardado en el componente, no el TMP del GO invisible
             sb.AppendLine(p.Revelada ? $"✓ {p.TextoReal}" : "???");
         }
         txtPistas.text = sb.ToString();
