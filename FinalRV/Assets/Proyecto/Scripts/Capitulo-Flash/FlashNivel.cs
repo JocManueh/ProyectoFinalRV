@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using AvisoNova = FlashAudioController.Aviso;
 using UnityEngine.XR.Interaction.Toolkit.Filtering;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
@@ -28,6 +30,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
 
     [Header("Retroalimentación")]
     [SerializeField] TMP_Text panel;
+    [SerializeField] FlashAudioController audioFlash;
     [SerializeField] TMP_Text tiempoNivel;
     [SerializeField] TMP_Text tiempoGlobal;
     [SerializeField] TMP_Text listaPasos;
@@ -35,6 +38,8 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
     [SerializeField, Min(0)] int puntosAlCompletar = 100;
 
     bool recetaRevelada;
+    bool avisadoUltimoMinuto;
+    readonly List<XRGrabInteractable> ampollasObservadas = new List<XRGrabInteractable>();
     int segundosMostrados = -1;
     int segundosGlobalesMostrados = -1;
     int pasoMostrado = -1;
@@ -83,6 +88,16 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         RefrescarTiempoGlobal();
         reloj.IniciarCapitulo(capitulo.tiempoSegundos);
         poseeCuenta = true;
+        matraz.ErrorDosis += AvisarNova;
+        bobina.CargaInterrumpida += AvisarCargaInterrumpida;
+        foreach (var ampolla in FindObjectsByType<ChemicalContainer>(FindObjectsInactive.Include))
+        {
+            if (ampolla.gameObject.scene != gameObject.scene ||
+                !ampolla.TryGetComponent(out XRGrabInteractable agarre)) continue;
+            agarre.selectExited.AddListener(AlSoltarAmpolla);
+            ampollasObservadas.Add(agarre);
+        }
+        audioFlash?.Iniciar();
         GameManager.Instance?.SetState(GameState.Capitulo);
         CambiarPaso(Paso.Clasificar, "Lee el cómic para descubrir los ingredientes.");
         RefrescarPanel();
@@ -93,6 +108,12 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         RefrescarTiempoGlobal();
         if (!EnCurso) return;
 
+        if (!avisadoUltimoMinuto && reloj.CapituloRestante > 0f && reloj.CapituloRestante <= 60f)
+        {
+            avisadoUltimoMinuto = true;
+            AvisarNova(AvisoNova.UnMinuto);
+        }
+
         float ahora = Time.unscaledTime;
         if (paso <= Paso.ClasificarCarga)
             ActualizarPreparacion();
@@ -102,6 +123,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
             socketMatraz.enabled = false;
             debeBajarPalanca = palancaActiva;
             CambiarPaso(Paso.Estabilizar, "Enciende la palanca para estabilizar el reactor.");
+            AvisarNova(AvisoNova.Estabilizar);
         }
 
         if (paso == Paso.Estabilizar && palancaActiva && !debeBajarPalanca &&
@@ -109,6 +131,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         {
             limitePico = ahora + segundosParaResponder;
             CambiarPaso(Paso.Pico, "¡Pico de energía! Pulsa EMERGENCIA.");
+            AvisarNova(AvisoNova.Pico);
         }
 
         if (paso == Paso.Pico && ahora >= limitePico)
@@ -203,7 +226,10 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         if (!carga.gameObject.activeInHierarchy)
         {
             if (paso != Paso.Bobina)
+            {
                 CambiarPaso(Paso.Bobina, "Coloca el condensador en Tesla y pulsa CARGAR.");
+                AvisarNova(AvisoNova.Tesla);
+            }
             return;
         }
 
@@ -211,12 +237,16 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         {
             if (!ObtenerDosis(seleccion, out ChemicalContainer ampolla) || ampolla != carga) continue;
             CambiarPaso(Paso.Mezclar, "Matraz desbloqueado. Retira las ampollas y mézclalas en orden.");
+            AvisarNova(AvisoNova.Matraz);
             socketMatraz.enabled = true;
             return;
         }
 
         if (paso != Paso.ClasificarCarga)
+        {
             CambiarPaso(Paso.ClasificarCarga, "Carga lista. Colócala en su bandeja.");
+            AvisarNova(AvisoNova.Carga);
+        }
     }
 
     public void PulsarTesla()
@@ -226,7 +256,10 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         if (paso != Paso.Bobina)
         {
             if (paso == Paso.Clasificar)
+            {
                 aviso = "Coloca todos los compuestos de la receta antes de usar Tesla.";
+                AvisarNova(AvisoNova.Compuestos);
+            }
             return;
         }
 
@@ -234,6 +267,8 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         aviso = bobina.socket.IsSelecting(bobina.condensador)
             ? "Deja el condensador en el socket hasta completar la carga."
             : "Coloca el condensador antes de pulsar CARGAR.";
+        if (!bobina.socket.IsSelecting(bobina.condensador))
+            AvisarNova(AvisoNova.Condensador);
     }
 
     public void SubirPalanca()
@@ -265,6 +300,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         }
 
         CambiarPaso(Paso.Confirmar, "Pico resuelto. Pulsa CONFIRMAR.");
+        AvisarNova(AvisoNova.Confirmar);
     }
 
     void FallarPico()
@@ -272,6 +308,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         ScoreSystem.Instance?.RegisterError(ErrorCode.E8_Tiempo, "Flash: pico sin resolver");
         debeBajarPalanca = palancaActiva;
         CambiarPaso(Paso.Estabilizar, "Se agotó la ventana. Baja y sube la palanca para reintentar.");
+        AvisarNova(AvisoNova.PicoFallido);
     }
 
     public void PulsarConfirmar()
@@ -301,6 +338,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         socketMatraz.enabled = false;
         bobina.enabled = false;
         CambiarPaso(resultado, mensaje);
+        audioFlash?.Terminar(resultado == Paso.Final);
         GameManager.Instance?.SetState(GameState.Resultado);
         RefrescarPanel();
     }
@@ -336,7 +374,10 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         if (recetaRevelada) return;
         recetaRevelada = true;
         if (paso == Paso.Clasificar)
+        {
             aviso = "Deja los compuestos de la receta en su bandeja.";
+            AvisarNova(AvisoNova.Ingredientes);
+        }
         if (isActiveAndEnabled) RefrescarPanel();
     }
 
@@ -407,8 +448,53 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         if (panel.text != texto) panel.text = texto;
     }
 
+    void AvisarNova(AvisoNova avisoNova)
+    {
+        if (EnCurso && audioFlash != null) audioFlash.Avisar(avisoNova);
+    }
+
+    void AvisarCargaInterrumpida() => AvisarNova(AvisoNova.CargaInterrumpida);
+
+    void AlSoltarAmpolla(SelectExitEventArgs evento)
+    {
+        if (!EnCurso || paso > Paso.ClasificarCarga || evento.isCanceled ||
+            evento.interactorObject is XRSocketInteractor ||
+            !(evento.interactableObject is XRGrabInteractable ampolla) || ampolla.isSelected)
+            return;
+
+        XRSocketInteractor bandeja = null;
+        float menorDistancia = float.PositiveInfinity;
+        RevisarCercania(socketCarga, ampolla, ref bandeja, ref menorDistancia);
+        foreach (var socket in socketsCompuestos)
+            RevisarCercania(socket, ampolla, ref bandeja, ref menorDistancia);
+
+        if (bandeja == null || Process(bandeja, ampolla)) return;
+        aviso = "Esa ampolla no va aquí. Revisa la receta.";
+        AvisarNova(AvisoNova.Bandeja);
+    }
+
+    static void RevisarCercania(XRSocketInteractor socket, XRGrabInteractable ampolla,
+        ref XRSocketInteractor mejor, ref float distancia)
+    {
+        Collider zona = socket.GetComponent<Collider>();
+        if (zona == null) return;
+
+        foreach (var collider in ampolla.colliders)
+        {
+            if (collider == null || !zona.bounds.Intersects(collider.bounds)) continue;
+            float cerca = (zona.bounds.center - collider.bounds.center).sqrMagnitude;
+            if (cerca >= distancia) continue;
+            distancia = cerca;
+            mejor = socket;
+        }
+    }
+
     void OnDestroy()
     {
+        if (matraz != null) matraz.ErrorDosis -= AvisarNova;
+        if (bobina != null) bobina.CargaInterrumpida -= AvisarCargaInterrumpida;
+        foreach (var ampolla in ampollasObservadas)
+            if (ampolla != null) ampolla.selectExited.RemoveListener(AlSoltarAmpolla);
         if (filtrosInstalados)
         {
             foreach (var socket in socketsCompuestos)
