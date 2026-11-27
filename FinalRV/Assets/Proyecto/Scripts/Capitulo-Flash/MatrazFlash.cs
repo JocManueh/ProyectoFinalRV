@@ -17,6 +17,8 @@ public class MatrazFlash : MonoBehaviour
     int dosisAgregadas;
     int dosisTotales;
 
+    public event System.Action<FlashAudioController.Aviso> ErrorDosis;
+
     public bool Completa => dosisTotales > 0 && dosisAgregadas == dosisTotales;
 
     void Awake()
@@ -48,6 +50,7 @@ public class MatrazFlash : MonoBehaviour
         if (ampolla.EstaVacia)
         {
             Mostrar("E1: ampolla vacía.");
+            ErrorDosis?.Invoke(FlashAudioController.Aviso.Vacia);
             return;
         }
 
@@ -55,6 +58,7 @@ public class MatrazFlash : MonoBehaviour
         if (indice < 0)
         {
             Mostrar("E3: ese reactivo no pertenece a la receta.");
+            ErrorDosis?.Invoke(FlashAudioController.Aviso.Reactivo);
             return;
         }
 
@@ -62,18 +66,21 @@ public class MatrazFlash : MonoBehaviour
         if (ampolla.sustancia == cargaDeRayo && paso < 3)
         {
             Mostrar("E3: añade primero las dos sales.");
+            ErrorDosis?.Invoke(FlashAudioController.Aviso.CargaAnticipada);
             return;
         }
 
         if (indice < paso || ampolla.volumen != 10)
         {
             Mostrar("E4: cantidad incorrecta.");
+            ErrorDosis?.Invoke(FlashAudioController.Aviso.Cantidad);
             return;
         }
 
         if (indice != paso)
         {
             Mostrar($"E5: ahora corresponde {receta.steps[paso].chemical.displayName}.");
+            ErrorDosis?.Invoke(FlashAudioController.Aviso.Orden);
             return;
         }
 

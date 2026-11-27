@@ -12,6 +12,8 @@ public class BobinaFlash : MonoBehaviour
     public GameObject ampollaCarga;
     public TMP_Text textoCarga;
 
+    public event System.Action CargaInterrumpida;
+
     float tiempo;
     bool cargando;
     bool entregada;
@@ -45,6 +47,7 @@ public class BobinaFlash : MonoBehaviour
         {
             cargando = false;
             textoCarga.text = "Carga 0%";
+            CargaInterrumpida?.Invoke();
             return;
         }
 
