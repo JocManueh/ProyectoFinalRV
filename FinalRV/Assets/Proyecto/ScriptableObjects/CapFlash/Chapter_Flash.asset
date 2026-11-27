@@ -20,5 +20,5 @@ MonoBehaviour:
   - Comienza con dos dosis de agua destilada.
   - Agrega NaCl y KCl antes de la glucosa.
   - La carga de rayo va al final.
-  tiempoSegundos: 300
+  tiempoSegundos: 900
   receta: {fileID: 11400000, guid: 6e239a9b6e054ee197015fc702d5e665, type: 2}
