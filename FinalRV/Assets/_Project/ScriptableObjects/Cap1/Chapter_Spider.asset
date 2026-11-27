@@ -18,4 +18,4 @@ MonoBehaviour:
   cienciaReal: 
   pistas: []
   tiempoSegundos: 210
-  receta: {fileID: 0}
+  receta: {fileID: 11400000, guid: daf97b53b675a314a82a8595983f7847, type: 2}

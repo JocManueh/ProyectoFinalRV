@@ -12,8 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe22391b978a8444eb5ac9aa1b650172, type: 3}
   m_Name: Recipe_Spider
   m_EditorClassIdentifier: Assembly-CSharp::RecipeSO
-  displayName: 
-  steps: []
+  displayName: "Suero Ar\xE1cnido"
+  steps:
+  - chemical: {fileID: 11400000, guid: 7d5e3437ca5a7f548a2031d0fdf94744, type: 2}
+    ampollas: 1
+  - chemical: {fileID: 11400000, guid: 57fb1c111a181de4fa1f773b09818a2a, type: 2}
+    ampollas: 1
+  - chemical: {fileID: 11400000, guid: c0e2ba7f1787161428aa95d6163a9bc3, type: 2}
+    ampollas: 1
+  - chemical: {fileID: 11400000, guid: cf788c16f03c3aa4292558bf1f141300, type: 2}
+    ampollas: 1
+  - chemical: {fileID: 11400000, guid: 6e5fbad193441904c9b5ddf5b568a4c5, type: 2}
+    ampollas: 1
+  - chemical: {fileID: 11400000, guid: eaccb6f69e037024e972d0956ea3fc67, type: 2}
+    ampollas: 1
   temperaturaRango: {x: 35, y: 40}
   presionRango: {x: 1, y: 1.5}
   voltajeRango: {x: 40, y: 60}

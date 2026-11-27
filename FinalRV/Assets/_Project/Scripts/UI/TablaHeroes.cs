@@ -17,13 +17,28 @@ public class TablaHeroes : MonoBehaviour
     [Header("Pistas revelables (3)")]
     [SerializeField] PistaRevelable[] pistasRevelables; // exactamente 3
 
+    [Header("Audio")]
+    [SerializeField] AudioSource audioSource; // 2D: se oye aunque la tabla esté lejos
+
     public event Action OnTablaCompletada;
     public bool Completada { get; private set; }
 
     int reveladas;
 
+    void Awake()
+    {
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
+        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f; // interfaz: volumen constante, sin atenuación por distancia
+    }
+
     void OnEnable()
     {
+        // El socket activa la tabla con SetActive(true): aquí suena su aparición.
+        if (Application.isPlaying && audioSource != null)
+            audioSource.PlayOneShot(SimpleTones.Beep(880f, 0.15f));
+
         foreach (var p in pistasRevelables)
             if (p != null) p.OnRevelada += AlRevelar;
     }
@@ -53,6 +68,9 @@ public class TablaHeroes : MonoBehaviour
 
     void AlRevelar(PistaRevelable p)
     {
+        if (audioSource != null)
+            audioSource.PlayOneShot(SimpleTones.Beep(660f, 0.12f));
+
         reveladas++;
         ActualizarTextoPistas();
 
