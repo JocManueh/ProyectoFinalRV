@@ -28,12 +28,82 @@ public class ErrorLog
     public float segundos; // segundos desde que arrancó la app
 }
 
+/// <summary>Guarda los puntos, el tiempo jugado y los errores de un capítulo.</summary>
+public sealed class ResultadoCapitulo
+{
+    public int Puntos { get; }
+    public float SegundosJugados { get; }
+    public string Motivos { get; }
+
+    public ResultadoCapitulo(int puntos, float segundosJugados, string motivos)
+    {
+        Puntos = puntos;
+        SegundosJugados = Mathf.Max(0f, segundosJugados);
+        Motivos = motivos;
+    }
+}
+
 public class ScoreSystem : MonoBehaviour
 {
     public static ScoreSystem Instance { get; private set; }
     public int TotalScore { get; private set; }
     public List<ErrorLog> Log { get; private set; } = new List<ErrorLog>();
     public event Action<int> OnScoreChanged;
+    public ResultadoCapitulo ResultadoSpider { get; private set; }
+    public ResultadoCapitulo ResultadoFlash { get; private set; }
+
+    bool registrandoSpider;
+    int puntosSpider;
+    int primerErrorSpider;
+
+    public void IniciarSpider()
+    {
+        registrandoSpider = true;
+        puntosSpider = 0;
+        primerErrorSpider = Log.Count;
+        ResultadoSpider = null;
+        ResultadoFlash = null;
+    }
+
+    public void GuardarSpider(float segundos)
+    {
+        if (!registrandoSpider) return;
+        registrandoSpider = false;
+        var motivos = new Dictionary<string, int>();
+        for (int i = primerErrorSpider; i < Log.Count; i++)
+        {
+            ErrorLog error = Log[i];
+            string motivo = MotivoSpider(error);
+            motivos.TryGetValue(motivo, out int cantidad);
+            motivos[motivo] = cantidad + 1;
+        }
+
+        var resumen = new System.Text.StringBuilder();
+        foreach (var motivo in motivos)
+        {
+            if (resumen.Length > 0) resumen.Append(" · ");
+            resumen.Append(motivo.Key);
+            if (motivo.Value > 1) resumen.Append($" ×{motivo.Value}");
+        }
+        ResultadoSpider = new ResultadoCapitulo(puntosSpider, segundos, resumen.ToString());
+    }
+
+    static string MotivoSpider(ErrorLog error)
+    {
+        switch (error.codigo)
+        {
+            case nameof(ErrorCode.E1_Vacio): return "Ampolla vacía";
+            case nameof(ErrorCode.E2_SinProcesar): return "Reactivo sin procesar";
+            case nameof(ErrorCode.E3_Incorrecto): return "Reactivo o clasificación incorrectos";
+            case nameof(ErrorCode.E4_Cantidad): return "Cantidad incorrecta";
+            case nameof(ErrorCode.E5_Orden): return "Orden incorrecto";
+            case nameof(ErrorCode.E6_FueraDeRango): return "Reactor fuera de rango";
+            case nameof(ErrorCode.E7_Radiacion): return "Tritio manipulado sin pinzas";
+            default: return string.IsNullOrWhiteSpace(error.detalle) ? error.codigo : error.detalle;
+        }
+    }
+
+    public void GuardarFlash(ResultadoCapitulo resultado) => ResultadoFlash = resultado;
 
     void Awake()
     {
@@ -66,6 +136,12 @@ public class ScoreSystem : MonoBehaviour
 
     public void Add(int puntos, string motivo)
     {
+        if (registrandoSpider)
+        {
+            int nuevo = Mathf.Max(0, puntosSpider + puntos);
+            puntos = nuevo - puntosSpider;
+            puntosSpider = nuevo;
+        }
         TotalScore = Mathf.Max(0, TotalScore + puntos);
         Debug.Log($"[Score] {puntos:+#;-#;0} ({motivo}) => total {TotalScore}");
         OnScoreChanged?.Invoke(TotalScore);
@@ -88,6 +164,11 @@ public class ScoreSystem : MonoBehaviour
     {
         TotalScore = 0;
         Log.Clear();
+        registrandoSpider = false;
+        puntosSpider = 0;
+        primerErrorSpider = 0;
+        ResultadoSpider = null;
+        ResultadoFlash = null;
         OnScoreChanged?.Invoke(TotalScore);
     }
 }

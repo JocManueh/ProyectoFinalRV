@@ -33,6 +33,8 @@ public class DNAExtractor : MonoBehaviour
     [SerializeField] Renderer[] pilotosOrden;
     [SerializeField] AudioSource audioSource;
 
+    public event System.Action OnADNExtraido;
+
     readonly bool[] completados = new bool[4];
     bool varillaUsada;
     bool extraido;
@@ -187,6 +189,7 @@ public class DNAExtractor : MonoBehaviour
                 cont.sustancia = adnSO;
                 cont.volumen   = 10;
                 cont.Refrescar();
+                OnADNExtraido?.Invoke();
             }
             Debug.Log("[DNAExtractor] ✅ Ampolla ADN de araña instanciada.");
             if (NOVA.Instance != null)

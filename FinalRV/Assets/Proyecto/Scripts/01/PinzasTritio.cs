@@ -12,6 +12,8 @@ public class PinzasTritio : MonoBehaviour
     [SerializeField] Transform punta;
     [SerializeField] float radio = 0.06f;
 
+    public event System.Action OnTritioRecogido;
+
     XRGrabInteractable grab;
     TritioItem sostenido;
 
@@ -46,6 +48,7 @@ public class PinzasTritio : MonoBehaviour
 
             item.TomarCon(punta);
             sostenido = item;
+            OnTritioRecogido?.Invoke();
             if (HapticFeedback.Instance != null) HapticFeedback.Instance.Suave();
             Debug.Log($"[PinzasTritio] Tritio tomado: {item.name}");
             return;

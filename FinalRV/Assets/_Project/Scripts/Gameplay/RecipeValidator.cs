@@ -21,6 +21,11 @@ public class RecipeValidator : MonoBehaviour
     public event Action<ResultadoValidacion> OnValidado;
     public ResultadoValidacion UltimoResultado { get; private set; }
 
+    public void MostrarAviso(string mensaje)
+    {
+        if (txtResultado != null) txtResultado.text = mensaje;
+    }
+
     public void Validate()
     {
         if (receta == null)

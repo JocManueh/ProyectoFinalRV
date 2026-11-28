@@ -15,7 +15,7 @@ public class ChapterChecklist : MonoBehaviour
 
     static readonly string[] items =
     {
-        "Leer el cómic",
+        "Abre el cómic y lee las 4 tarjetas",
         "Leer la tabla de héroes (3 pistas)",
         "Clasificar los reactivos",
         "Extraer ADN de araña",
@@ -26,7 +26,21 @@ public class ChapterChecklist : MonoBehaviour
         "Resolver el evento EMP"
     };
 
+    [SerializeField] bool usarChecklistSpider;
     readonly bool[] hechos = new bool[9];
+    int clasificados;
+    int reactivos = 6;
+
+    int CantidadPasos => usarChecklistSpider ? 7 : hechos.Length;
+
+    public static string NombrePaso(int indice) => items[indice];
+
+    public void ActualizarClasificados(int cantidad, int total)
+    {
+        clasificados = cantidad;
+        reactivos = total;
+        Refrescar();
+    }
 
     void Start() => Refrescar();
 
@@ -43,16 +57,24 @@ public class ChapterChecklist : MonoBehaviour
 
     public bool TodoCompleto()
     {
-        foreach (var h in hechos) if (!h) return false;
+        for (int i = 0; i < CantidadPasos; i++) if (!hechos[i]) return false;
         return true;
     }
 
     void Refrescar()
     {
         if (cuerpo == null) return;
-        var sb = new StringBuilder("CAPÍTULO 1 — CHECKLIST\n\n");
-        for (int i = 0; i < items.Length; i++)
-            sb.AppendLine((hechos[i] ? "[X] " : "[  ] ") + items[i]);
+        var sb = new StringBuilder("Nivel 1 · Spider-Man\n");
+        int actual = SiguientePendiente();
+        for (int i = 0; i < CantidadPasos; i++)
+        {
+            string progreso = usarChecklistSpider && i == 2 ? $" ({clasificados}/{reactivos})" : "";
+            string linea = $"{i + 1}. {items[i]}{progreso}";
+            if (hechos[i]) linea = $"<u>{linea}</u>";
+            else if (i == actual) linea = $"<b>{linea}</b>";
+            sb.AppendLine(linea);
+        }
+        if (usarChecklistSpider && TodoCompleto()) sb.AppendLine("<b>Pulsa ANALIZAR</b>");
         cuerpo.text = sb.ToString();
     }
 
@@ -60,7 +82,7 @@ public class ChapterChecklist : MonoBehaviour
 
     public int SiguientePendiente()
     {
-        for (int i = 0; i < hechos.Length; i++) if (!hechos[i]) return i;
+        for (int i = 0; i < CantidadPasos; i++) if (!hechos[i]) return i;
         return -1;
     }
 }
