@@ -28277,7 +28277,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 177092847627147058, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1260597055833533351, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_InteractionLayers.m_Bits

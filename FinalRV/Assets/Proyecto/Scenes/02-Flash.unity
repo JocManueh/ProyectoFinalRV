@@ -2586,7 +2586,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 177092847627147058, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1260597055833533351, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_InteractionLayers.m_Bits
@@ -10797,6 +10797,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 626a4d6723d6ad24b9aebb811ad5a3dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &930226008 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7047563403876681670, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
+  m_PrefabInstance: {fileID: 3909007350499549570}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d711b92ddb0c75c4598409274c31a331, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PanelUI
 --- !u!1001 &935590575
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -21363,11 +21374,6 @@ GameObject:
 Transform:
   m_CorrespondingSourceObject: {fileID: 2410442182472193796, guid: 5fc5de105b350f04bbfd1b6d5d49b271, type: 3}
   m_PrefabInstance: {fileID: 7150754482520219609}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &930226008 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7047563403876681670, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
-  m_PrefabInstance: {fileID: 3909007350499549570}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3909007350499549570
 PrefabInstance:
