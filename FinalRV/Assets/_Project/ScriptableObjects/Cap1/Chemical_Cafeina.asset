@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98aa040eeb3e3a0498e2d203c4166f93, type: 3}
   m_Name: Chemical_Cafeina
   m_EditorClassIdentifier: Assembly-CSharp::ChemicalSO
-  id: 
-  displayName: 
-  symbol: 
+  id: cafeina
+  displayName: "Cafe\xEDna"
+  symbol: C8H10N4O2
   type: 0
   hazardNote: 
-  color: {r: 1, g: 1, b: 1, a: 1}
+  color: {r: 0.9843137, g: 0.54901963, b: 0, a: 1}
   requiresProcessing: 0

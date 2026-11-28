@@ -17,5 +17,5 @@ MonoBehaviour:
   symbol: Hg
   type: 0
   hazardNote: 
-  color: {r: 0.4566037, g: 0.38509783, b: 0.38509783, a: 1}
+  color: {r: 0, g: 0.4745098, b: 0.41960785, a: 1}
   requiresProcessing: 0

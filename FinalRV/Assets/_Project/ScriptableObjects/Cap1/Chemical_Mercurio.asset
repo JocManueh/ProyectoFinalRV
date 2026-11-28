@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98aa040eeb3e3a0498e2d203c4166f93, type: 3}
   m_Name: Chemical_Mercurio
   m_EditorClassIdentifier: Assembly-CSharp::ChemicalSO
-  id: 
-  displayName: 
-  symbol: 
+  id: mercurio
+  displayName: Mercurio
+  symbol: Hg
   type: 0
   hazardNote: 
-  color: {r: 1, g: 1, b: 1, a: 1}
+  color: {r: 0.5568628, g: 0.14117648, b: 0.6666667, a: 1}
   requiresProcessing: 0
