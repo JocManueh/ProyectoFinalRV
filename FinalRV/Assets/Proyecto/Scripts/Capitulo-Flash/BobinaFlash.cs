@@ -21,10 +21,32 @@ public class BobinaFlash : MonoBehaviour
     float tiempo;
     bool cargando;
     bool entregada;
+    GameObject efectoCargaEnBobina;
+
+    void Awake()
+    {
+        if (efectoVisualAmpolla != null) efectoVisualAmpolla.SetActive(false);
+    }
 
     public void MostrarEfectosDePaso(bool activo)
     {
-        if (efectoVisualBobina != null) efectoVisualBobina.SetActive(activo);
+        if (efectoVisualBobina != null)
+        {
+            efectoVisualBobina.SetActive(activo);
+            if (activo)
+            {
+                foreach (var particulas in efectoVisualBobina.GetComponentsInChildren<ParticleSystem>())
+                    if (!particulas.isPlaying) particulas.Play(false);
+            }
+        }
+
+        // La ampolla aún no se entrega durante el paso; su padre está inactivo.
+        if (activo && efectoCargaEnBobina == null && efectoVisualAmpolla != null)
+        {
+            efectoCargaEnBobina = Instantiate(efectoVisualAmpolla, transform, true);
+            efectoCargaEnBobina.name = "Efecto de carga durante Tesla";
+        }
+        if (efectoCargaEnBobina != null) efectoCargaEnBobina.SetActive(activo);
         if (efectoSonidoBobina != null) efectoSonidoBobina.SetActive(activo);
     }
 

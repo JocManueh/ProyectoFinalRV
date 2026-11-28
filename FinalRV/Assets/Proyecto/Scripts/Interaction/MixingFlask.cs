@@ -32,6 +32,12 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
 
     // Estado de la receta
     readonly List<RecipeStep> mezcla = new List<RecipeStep>();
+    readonly HashSet<ChemicalContainer> consumidasEnSocket = new HashSet<ChemicalContainer>();
+    Vector3 escalaLiquido;
+    Vector3 posicionLiquido;
+    float fondoLiquido;
+    float alturaActual;
+    float alturaObjetivo;
     int paso;
     int enPaso;
     int totalInsertadas;
@@ -58,6 +64,7 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
             foreach (var step in receta.steps)
                 if (step != null) totalNecesarias += Mathf.Max(0, step.ampollas);
 
+        PrepararLiquido();
         ActualizarNivel();
     }
 
@@ -73,6 +80,7 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
         socket.selectFilters.Remove(this);
         socket.selectEntered.RemoveListener(AlInsertar);
         socket.selectExited.RemoveListener(AlSacar);
+        consumidasEnSocket.Clear();
     }
 
     // Unity pregunta aquí: "¿puede este socket agarrar esta ampolla?"
@@ -80,10 +88,13 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
     {
         var ampolla = interactable.transform.GetComponent<ChemicalContainer>();
         if (ampolla == null) return true; // no es ampolla: otras reglas deciden
+        // XRI vuelve a consultar el filtro mientras conserva una selección.
+        if (consumidasEnSocket.Contains(ampolla)) return true;
 
         if (ampolla.EstaVacia)
         {
-            Rechazar(ErrorCode.E1_Vacio, "Esa ampolla está vacía. Busca una que tenga contenido.");
+            if (!interactable.isSelected || interactor.IsSelecting(interactable))
+                Rechazar(ErrorCode.E1_Vacio, "Esa ampolla está vacía. Busca una que tenga contenido.");
             return false;
         }
 
@@ -157,7 +168,7 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
         if (HapticFeedback.Instance != null) HapticFeedback.Instance.Suave();
 
         var amp = args.interactableObject.transform.GetComponent<ChemicalContainer>();
-        if (amp == null || amp.sustancia == null) return;
+        if (amp == null || amp.EstaVacia || consumidasEnSocket.Contains(amp)) return;
         var cont = amp;
 
         // Verificar si es un reactivo sin procesar (E2)
@@ -171,6 +182,7 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
             return;
         }
 
+        consumidasEnSocket.Add(cont);
         // Historial en orden para RecipeValidator (red de seguridad al analizar).
         bool encontrado = false;
         foreach (var pasoMezcla in mezcla)
@@ -207,12 +219,17 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
         if (liquidoRenderer != null)
         {
             var mat = Application.isPlaying ? liquidoRenderer.material : liquidoRenderer.sharedMaterial;
-            if (mat != null) mat.color = cont.sustancia.color;
+            if (mat != null)
+            {
+                Color color = cont.sustancia.color;
+                color.a = mat.color.a;
+                mat.color = color;
+            }
         }
         ActualizarNivel();
 
         amp.Vaciar();
-        Destroy(amp.gameObject, 0.5f);
+
     }
 
     void ActualizarNivel()
@@ -223,12 +240,41 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
             ? Mathf.Clamp01((float)totalInsertadas / totalNecesarias)
             : 0f;
 
-        var escala = liquido.localScale;
-        escala.y = Mathf.Max(0.001f, fraccion * alturaMax);
-        liquido.localScale = escala;
+        alturaObjetivo = fraccion * alturaMax;
     }
 
-    void AlSacar(SelectExitEventArgs args) => Pintar(colorBase);
+    void PrepararLiquido()
+    {
+        if (liquido == null) return;
+        escalaLiquido = liquido.localScale;
+        posicionLiquido = liquido.localPosition;
+        if (liquidoRenderer != null && liquidoRenderer.transform == liquido)
+            fondoLiquido = liquidoRenderer.localBounds.min.y;
+        AplicarAltura(0f);
+    }
+
+    void Update()
+    {
+        if (liquido == null || alturaActual == alturaObjetivo) return;
+        float velocidad = alturaMax / (Mathf.Max(1, totalNecesarias) * 0.35f);
+        AplicarAltura(Mathf.MoveTowards(alturaActual, alturaObjetivo, velocidad * Time.unscaledDeltaTime));
+    }
+
+    void AplicarAltura(float altura)
+    {
+        alturaActual = altura;
+        liquido.localScale = new Vector3(escalaLiquido.x, altura, escalaLiquido.z);
+        liquido.localPosition = posicionLiquido +
+            liquido.localRotation * (Vector3.up * (fondoLiquido * (escalaLiquido.y - altura)));
+        if (liquidoRenderer != null) liquidoRenderer.enabled = altura > 0f;
+    }
+
+    void AlSacar(SelectExitEventArgs args)
+    {
+        var ampolla = args.interactableObject.transform.GetComponent<ChemicalContainer>();
+        if (ampolla != null) consumidasEnSocket.Remove(ampolla);
+        Pintar(colorBase);
+    }
 
     void Pintar(Color c)
     {
