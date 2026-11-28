@@ -8279,23 +8279,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Cap1Manager
   capitulo: {fileID: 11400000, guid: ebf42751dca89a04b8d8b9de6b146099, type: 2}
-  comicReader: {fileID: 0}
+  socketComic: {fileID: 1135649301}
   tablaHeroes: {fileID: 2097929875}
   bandejas:
   - {fileID: 1488413829}
   - {fileID: 558712969}
   - {fileID: 868898187}
+  reactivosPorClasificar:
+  - {fileID: 11400000, guid: 107c12fb538a1f24dad38bd39dedbe99, type: 2}
+  - {fileID: 11400000, guid: cd0955955211cdb4383b1a638e4bd06e, type: 2}
+  - {fileID: 11400000, guid: 96d20bedd1f95bf44960bd53a9fa2744, type: 2}
+  - {fileID: 11400000, guid: eaccb6f69e037024e972d0956ea3fc67, type: 2}
+  - {fileID: 11400000, guid: 6e5fbad193441904c9b5ddf5b568a4c5, type: 2}
+  - {fileID: 11400000, guid: cf788c16f03c3aa4292558bf1f141300, type: 2}
   dnAExtractor: {fileID: 1126196074}
-  tritiumChamber: {fileID: 0}
+  pinzas: {fileID: 1433411154}
   matraz: {fileID: 35453229}
-  reactor: {fileID: 0}
+  reactor: {fileID: 820562196}
   validator: {fileID: 839588812}
-  eventDirector: {fileID: 359616927}
   dron: {fileID: 72983039}
-  quiz: {fileID: 0}
   checklist: {fileID: 1619245478}
   botonAnalizar: {fileID: 0}
+  tiempoNivel: {fileID: 1546606145}
+  globalEnPanel: {fileID: 1126332761}
+  panelNivel: {fileID: 1126332760}
   puntosPorTarea: 20
+  escenaFlash: 02-Flash
 --- !u!4 &605741251
 Transform:
   m_ObjectHideFlags: 0
@@ -10716,6 +10725,7 @@ MonoBehaviour:
   txtTemperatura: {fileID: 651782643}
   tempMin: 20
   tempMax: 80
+  esperarMezcla: 1
 --- !u!4 &820562197
 Transform:
   m_ObjectHideFlags: 0
@@ -16172,6 +16182,16 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
+--- !u!114 &1126332760 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7047563403876681670, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
+  m_PrefabInstance: {fileID: 1126332759}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1126332761 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 635706799530904541, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
+  m_PrefabInstance: {fileID: 1126332759}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1128112814
 GameObject:
   m_ObjectHideFlags: 0
@@ -24107,7 +24127,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 04:00
+  m_text: "Nivel 05:00  |  Global 15:00"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 0e31860a05ee57b4480a5909e89fd4ac, type: 2}
   m_sharedMaterial: {fileID: 1196653485632364528, guid: 0e31860a05ee57b4480a5909e89fd4ac, type: 2}
@@ -24134,12 +24154,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 19.9
+  m_fontSize: 12
   m_fontSizeBase: 0.6
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_fontSizeMin: 8
+  m_fontSizeMax: 12
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -25134,7 +25154,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5f0141dfd68ca644b84a2acd67af4b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChapterChecklist
-  cuerpo: {fileID: 0}
+  cuerpo: {fileID: 1724656701}
+  usarChecklistSpider: 1
 --- !u!4 &1619245479
 Transform:
   m_ObjectHideFlags: 0
@@ -26129,7 +26150,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Pasos de Flash
+  m_text: Pasos de Spider-Man
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 691957bcdf355e1438a1eb25e78b3b75, type: 2}
   m_sharedMaterial: {fileID: -2760415821188200223, guid: 691957bcdf355e1438a1eb25e78b3b75, type: 2}
@@ -28399,18 +28420,18 @@ PrefabInstance:
     - target: {fileID: 2304902795837412248, guid: da3b468b35b58334693dfcd04f6e06a7, type: 3}
       propertyPath: m_OnPress.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 839588812}
+      objectReference: {fileID: 605741250}
     - target: {fileID: 2304902795837412248, guid: da3b468b35b58334693dfcd04f6e06a7, type: 3}
       propertyPath: m_OnPress.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2304902795837412248, guid: da3b468b35b58334693dfcd04f6e06a7, type: 3}
       propertyPath: m_OnPress.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: Validate
+      value: Analizar
       objectReference: {fileID: 0}
     - target: {fileID: 2304902795837412248, guid: da3b468b35b58334693dfcd04f6e06a7, type: 3}
       propertyPath: m_OnPress.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: RecipeValidator, Assembly-CSharp
+      value: Cap1Manager, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 2304902795837412248, guid: da3b468b35b58334693dfcd04f6e06a7, type: 3}
       propertyPath: m_OnPress.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName

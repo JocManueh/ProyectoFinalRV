@@ -664,14 +664,15 @@ public static class CrearEscenaCap1
         var soCap1 = new SerializedObject(cap1);
         soCap1.FindProperty("capitulo").objectReferenceValue = capitulo;
         soCap1.FindProperty("tablaHeroes").objectReferenceValue = tablaHeroes;
+        soCap1.FindProperty("socketComic").objectReferenceValue = comicReader.GetComponent<XRSocketInteractor>();
         soCap1.FindProperty("dnAExtractor").objectReferenceValue = extractor;
-        soCap1.FindProperty("tritiumChamber").objectReferenceValue = chamber;
+
         soCap1.FindProperty("matraz").objectReferenceValue = mixingFlask;
         soCap1.FindProperty("reactor").objectReferenceValue = reactorCtrl;
         soCap1.FindProperty("validator").objectReferenceValue = validator;
-        soCap1.FindProperty("eventDirector").objectReferenceValue = eventDir;
+
         soCap1.FindProperty("dron").objectReferenceValue = dronComp;
-        soCap1.FindProperty("quiz").objectReferenceValue = quizComp;
+
         soCap1.FindProperty("checklist").objectReferenceValue = checklistComp;
         if (botonAnalizarComp != null)
             soCap1.FindProperty("botonAnalizar").objectReferenceValue = botonAnalizarComp;

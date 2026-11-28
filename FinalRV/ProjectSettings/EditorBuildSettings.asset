@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Proyecto/Scenes/01_Laboratorio.unity
     guid: 6fe847fe2e876224c95344b49c921006
   - enabled: 1
+    path: Assets/Proyecto/Scenes/02-Flash.unity
+    guid: 838a73bafd20fdd4598465b52197ef3c
+  - enabled: 1
     path: Assets/Proyecto/Scenes/02_Cierre.unity
     guid: a194a4baa53ff364facbff6a96e6e997
   m_configObjects:

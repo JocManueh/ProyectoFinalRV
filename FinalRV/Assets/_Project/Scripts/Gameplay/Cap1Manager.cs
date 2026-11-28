@@ -1,189 +1,231 @@
-/*
- * DESCRIPCIÓN: Director de la escena Test_Cap1. Orquesta los 14 pasos del Capítulo 1
- * (Spider-Man), conecta todos los subsistemas y cierra el capítulo al terminar.
- * Índices del checklist:
- *   0-Cómic  1-Tabla  2-Clasificación  3-ADN  4-Tritio  5-Mezcla
- *   6-Reactor  7-Analizar  8-EMP
- */
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
+/// <summary>Registra los pasos de Spider-Man y abre Flash tras un análisis correcto.</summary>
 public class Cap1Manager : MonoBehaviour
 {
-    [Header("Datos")]
     [SerializeField] ChapterSO capitulo;
-
-    [Header("Subsistemas")]
-    [SerializeField] ComicReader comicReader;
+    [SerializeField] XRSocketInteractor socketComic;
     [SerializeField] TablaHeroes tablaHeroes;
-    [SerializeField] ClassificationTray[] bandejas;   // 3 bandejas
+    [SerializeField] ClassificationTray[] bandejas;
+    [SerializeField] ChemicalSO[] reactivosPorClasificar;
     [SerializeField] DNAExtractor dnAExtractor;
-    [SerializeField] TritiumChamber tritiumChamber;
+    [SerializeField] PinzasTritio pinzas;
     [SerializeField] MixingFlask matraz;
     [SerializeField] ReactorController reactor;
     [SerializeField] RecipeValidator validator;
-    [SerializeField] EventDirector eventDirector;
     [SerializeField] DronXentari dron;
-    [SerializeField] QuizPanel quiz;
     [SerializeField] ChapterChecklist checklist;
     [SerializeField] BotonLab botonAnalizar;
+    [SerializeField] TMP_Text tiempoNivel;
+    [SerializeField] TMP_Text globalEnPanel;
+    [SerializeField] PanelUI panelNivel;
 
-    [Header("Puntos por tarea")]
+    const string TituloNivel = "Nivel 1 · Spider-Man";
+    const string DescripcionNivel = "Doctor, investiga el origen del poder arácnido. Coloca el cómic, revela las pistas y prepara el suero. Cuando el reactor esté estable, pulsa ANALIZAR.";
+    int ultimoSegundoNivel = -1;
+    int ultimoSegundoGlobal = -1;
     [SerializeField] int puntosPorTarea = 20;
+    [SerializeField] string escenaFlash = "02-Flash";
 
-    // Estado interno
-    readonly bool[] completados = new bool[9];
-    bool capituloTerminado;
+    readonly bool[] completados = new bool[7];
+    readonly HashSet<ChemicalSO> clasificados = new HashSet<ChemicalSO>();
+    TimerManager reloj;
+    bool iniciado;
+    bool tiempoAgotado;
+    bool analisisSolicitado;
+    bool cambiandoEscena;
 
     void OnEnable()
     {
-        if (ChapterManager.Instance != null)
-            ChapterManager.Instance.OnChapterStarted += AlIniciarCapitulo;
-
-        if (tablaHeroes != null)
-            tablaHeroes.OnTablaCompletada += () => Completar(1);
-
-        foreach (var b in bandejas)
-            if (b != null) b.OnClasificacionCorrecta += _ => VerificarBandejas();
-
-        if (validator != null)
-            validator.OnValidado += AlValidar;
-
-        if (quiz != null)
-            quiz.OnQuizCompletado += AlQuizCompletado;
-
-        if (botonAnalizar != null)
-            botonAnalizar.OnPressed.AddListener(validator.Validate);
-
-        if (TimerManager.Instance != null)
-            TimerManager.Instance.OnChapterTimeUp += AlTiempoAgotado;
+        if (socketComic != null) socketComic.selectEntered.AddListener(AlAbrirComic);
+        if (tablaHeroes != null) tablaHeroes.OnTablaCompletada += AlRevelarPistas;
+        foreach (var bandeja in bandejas)
+            if (bandeja != null) bandeja.OnReactivoClasificado += AlClasificar;
+        if (dnAExtractor != null) dnAExtractor.OnADNExtraido += AlADNExtraido;
+        if (pinzas != null) pinzas.OnTritioRecogido += AlTritiioObtenido;
+        if (reactor != null) reactor.OnEstable += AlEstabilizar;
+        if (validator != null) validator.OnValidado += AlValidar;
+        if (botonAnalizar != null) botonAnalizar.OnPressed.AddListener(Analizar);
     }
 
     void OnDisable()
     {
-        if (ChapterManager.Instance != null)
-            ChapterManager.Instance.OnChapterStarted -= AlIniciarCapitulo;
-        if (TimerManager.Instance != null)
-            TimerManager.Instance.OnChapterTimeUp -= AlTiempoAgotado;
-        if (botonAnalizar != null)
-            botonAnalizar.OnPressed.RemoveListener(validator.Validate);
+        if (socketComic != null) socketComic.selectEntered.RemoveListener(AlAbrirComic);
+        if (tablaHeroes != null) tablaHeroes.OnTablaCompletada -= AlRevelarPistas;
+        foreach (var bandeja in bandejas)
+            if (bandeja != null) bandeja.OnReactivoClasificado -= AlClasificar;
+        if (dnAExtractor != null) dnAExtractor.OnADNExtraido -= AlADNExtraido;
+        if (pinzas != null) pinzas.OnTritioRecogido -= AlTritiioObtenido;
+        if (reactor != null) reactor.OnEstable -= AlEstabilizar;
+        if (validator != null) validator.OnValidado -= AlValidar;
+        if (botonAnalizar != null) botonAnalizar.OnPressed.RemoveListener(Analizar);
     }
 
     void Start()
     {
-        // Iniciar el capítulo automáticamente si no hay ComicReader
-        if (comicReader == null && capitulo != null && ChapterManager.Instance != null)
-            ChapterManager.Instance.StartChapter(capitulo);
+        reloj = TimerManager.Instance;
+        if (socketComic != null)
+        {
+            if (reloj != null && !reloj.GlobalIniciado) reloj.IniciarGlobal();
+            ScoreSystem.Instance?.IniciarSpider();
+        }
+        ActualizarRelojes();
     }
 
-    void AlIniciarCapitulo(ChapterSO cap)
+    void Update()
     {
-        Debug.Log("[Cap1Manager] Capítulo iniciado.");
-        if (NOVA.Instance != null)
-            NOVA.Instance.Say("Capítulo 1: Sentido Arácnido. Inserta el cómic para comenzar.");
+        ActualizarRelojes();
+        if (tiempoAgotado || cambiandoEscena) return;
+        if (SinTiempo())
+        {
+            AgotarTiempo();
+            return;
+        }
+        if (!iniciado) return;
+
+        if (matraz != null && matraz.Completa) AlMezclaCompleta();
+        if (reactor != null && reactor.Estable) AlEstabilizar();
     }
 
-    // ── Completar tareas ─────────────────────────────────────────────────────
+    bool SinTiempo() => reloj != null &&
+        ((reloj.GlobalIniciado && reloj.GlobalRestante <= 0f) ||
+         (iniciado && reloj.CapituloRestante <= 0f));
 
-    public void Completar(int idx)
+    void ActualizarRelojes()
     {
-        if (capituloTerminado || idx < 0 || idx >= completados.Length || completados[idx]) return;
-        completados[idx] = true;
+        float segundosNivel = iniciado && reloj != null
+            ? reloj.CapituloRestante
+            : capitulo != null ? capitulo.tiempoSegundos : 0f;
+        int nivel = Mathf.CeilToInt(segundosNivel);
+        int global = reloj != null ? Mathf.CeilToInt(reloj.GlobalRestante) : 0;
+        if (nivel == ultimoSegundoNivel && global == ultimoSegundoGlobal) return;
 
-        if (ScoreSystem.Instance != null)
-            ScoreSystem.Instance.Add(puntosPorTarea, $"Cap1 tarea {idx}");
-
-        if (checklist != null) checklist.Completar(idx);
-        Debug.Log($"[Cap1Manager] Tarea {idx} completada.");
-
-        VerificarFin();
+        ultimoSegundoNivel = nivel;
+        ultimoSegundoGlobal = global;
+        string capituloTexto = $"Nivel {TimerManager.Formato(nivel)}";
+        string globalTexto = $"Global {TimerManager.Formato(global)}";
+        if (tiempoNivel != null) tiempoNivel.text = $"{capituloTexto} | {globalTexto}";
+        if (globalEnPanel != null) globalEnPanel.text = globalTexto;
+        panelNivel?.SetTexto(TituloNivel, $"{DescripcionNivel}\n\nTiempo de capítulo  {TimerManager.Formato(nivel)}");
     }
 
-    // Cómic insertado → tarea 0
-    public void AlComicInsertado() => Completar(0);
-
-    // Bandejas: todas deben tener al menos una correcta
-    void VerificarBandejas()
+    void AlAbrirComic(SelectEnterEventArgs args)
     {
-        foreach (var b in bandejas)
-            if (b == null || !b.TieneCorrecta) return;
-        Completar(2);
+        if (iniciado || tiempoAgotado || SinTiempo()) return;
+        reloj = TimerManager.Instance;
+        if (capitulo != null && reloj != null)
+            reloj.IniciarCapitulo(capitulo.tiempoSegundos);
+        GameManager.Instance?.SetState(GameState.Capitulo);
+        AlComicInsertado();
     }
 
-    // ADN extraído → tarea 3 (llamar desde DNAExtractor via UnityEvent o polling)
+    public void AlComicInsertado()
+    {
+        iniciado = true;
+        Completar(0);
+    }
+
+    void AlRevelarPistas() => Completar(1);
+
+    void AlClasificar(ChemicalSO reactivo)
+    {
+        if (tiempoAgotado || cambiandoEscena || completados[2] ||
+            System.Array.IndexOf(reactivosPorClasificar, reactivo) < 0 ||
+            !clasificados.Add(reactivo)) return;
+
+        checklist?.ActualizarClasificados(clasificados.Count, reactivosPorClasificar.Length);
+        if (clasificados.Count == reactivosPorClasificar.Length) Completar(2);
+    }
+
     public void AlADNExtraido() => Completar(3);
-
-    // Tritio obtenido con pinzas → tarea 4
     public void AlTritiioObtenido() => Completar(4);
-
-    // Mezcla insertada → tarea 5 (se llama cuando se inserta el último reactivo)
     public void AlMezclaCompleta() => Completar(5);
 
-    // Reactor estable → tarea 6
-    void OnEnable2() { if (reactor != null) reactor.OnEstable += () => Completar(6); }
-
-    // Validación → tarea 7
-    void AlValidar(ResultadoValidacion r)
+    void AlEstabilizar()
     {
-        if (r == ResultadoValidacion.Correcto)
+        if (completados[5]) Completar(6);
+    }
+
+    public void Completar(int indice)
+    {
+        if (tiempoAgotado || cambiandoEscena || indice < 0 ||
+            indice >= completados.Length || completados[indice]) return;
+        completados[indice] = true;
+        if (indice == 5 && reactor != null) reactor.HabilitarEstabilizacion();
+        ScoreSystem.Instance?.Add(puntosPorTarea, $"Cap1 tarea {indice}");
+        checklist?.Completar(indice);
+    }
+
+    public void Analizar()
+    {
+        if (cambiandoEscena || validator == null) return;
+        if (tiempoAgotado || SinTiempo())
         {
-            Completar(7);
-            // Activar dron
-            if (dron != null) dron.Activar(capitulo?.receta?.displayName ?? "Suero Arácnido");
-            // Mostrar quiz
-            if (quiz != null) quiz.gameObject.SetActive(true);
+            AgotarTiempo();
+            validator.MostrarAviso("Tiempo agotado.");
+            return;
         }
-    }
 
-    // EMP resuelto → tarea 8
-    public void AlEMPResuelto() => Completar(8);
-
-    // Quiz completado → cierre
-    void AlQuizCompletado()
-    {
-        Debug.Log("[Cap1Manager] Quiz completado → cerrando capítulo.");
-        StartCoroutine(CerrarCapitulo());
-    }
-
-    void AlTiempoAgotado()
-    {
-        Debug.Log("[Cap1Manager] ⏱ Tiempo agotado.");
-        if (ScoreSystem.Instance != null)
-            ScoreSystem.Instance.RegisterError(ErrorCode.E8_Tiempo, "Tiempo del capítulo agotado");
-        if (NOVA.Instance != null)
-            NOVA.Instance.Say("Tiempo agotado. Calculando puntuación final.");
-        StartCoroutine(CerrarCapitulo());
-    }
-
-    void VerificarFin()
-    {
-        if (checklist != null && checklist.TodoCompleto())
+        // El matraz y el reactor conservan su aviso de error y su penalización.
+        if (matraz != null && matraz.Completa) AlMezclaCompleta();
+        if (reactor != null && reactor.Estable) AlEstabilizar();
+        for (int i = 0; i < 5; i++)
         {
-            Debug.Log("[Cap1Manager] ✅ Todos los puntos del checklist completados.");
-            StartCoroutine(CerrarCapitulo());
+            if (completados[i]) continue;
+            string aviso = $"Falta: {ChapterChecklist.NombrePaso(i)}.";
+            validator.MostrarAviso(aviso);
+            NOVA.Instance?.Say(aviso);
+            return;
         }
+
+        analisisSolicitado = true;
+        validator.Validate();
+        analisisSolicitado = false;
     }
 
-    IEnumerator CerrarCapitulo()
+    void AlValidar(ResultadoValidacion resultado)
     {
-        if (capituloTerminado) yield break;
-        capituloTerminado = true;
+        if (!analisisSolicitado || resultado != ResultadoValidacion.Correcto || cambiandoEscena)
+            return;
+        if (!completados[5] || !completados[6] || reactor == null || !reactor.Estable)
+            return;
+        if (!Application.CanStreamedLevelBeLoaded(escenaFlash))
+        {
+            Debug.LogError($"[Cap1] Agrega '{escenaFlash}' a la lista de escenas del perfil activo.");
+            validator.MostrarAviso("Análisis correcto. Flash no está disponible en este perfil.");
+            return;
+        }
 
-        if (ChapterManager.Instance != null) ChapterManager.Instance.EndChapter();
+        cambiandoEscena = true;
+        reloj?.DetenerCapitulo();
+        ScoreSystem.Instance?.Add(puntosPorTarea, "Cap1 análisis correcto");
+        float segundos = capitulo != null && reloj != null
+            ? capitulo.tiempoSegundos - reloj.CapituloRestante
+            : 0f;
+        ScoreSystem.Instance?.GuardarSpider(segundos);
+        dron?.Activar(capitulo?.receta?.displayName ?? "Suero Arácnido");
+        StartCoroutine(AbrirFlash());
+    }
 
-        int score = ScoreSystem.Instance != null ? ScoreSystem.Instance.TotalScore : 0;
-        string log = Bitacora.Instance != null ? Bitacora.Instance.ObtenerResumen() : "";
+    void AgotarTiempo()
+    {
+        if (tiempoAgotado) return;
+        tiempoAgotado = true;
+        reloj?.DetenerCapitulo();
+        ScoreSystem.Instance?.RegisterError(ErrorCode.E8_Tiempo, "Tiempo del capítulo agotado");
+        validator?.MostrarAviso("Tiempo agotado.");
+        NOVA.Instance?.Say("Tiempo agotado. Reinicia el capítulo para volver a intentarlo.");
+    }
 
-        Debug.Log($"[Cap1Manager] ── CIERRE ──\nPuntuación: {score}\nBitácora:\n{log}");
-
-        if (NOVA.Instance != null)
-            NOVA.Instance.Say($"Capítulo 1 completado. Puntuación: {score} puntos. Preparando Capítulo 2.");
-
+    IEnumerator AbrirFlash()
+    {
         yield return new WaitForSecondsRealtime(3f);
-
-        if (GameManager.Instance != null)
-            GameManager.Instance.SetState(GameState.Resultado);
-
-        Debug.Log("[Cap1Manager] GameManager → Resultado. (Carga de escena pendiente)");
+        SceneManager.LoadSceneAsync(escenaFlash, LoadSceneMode.Single);
     }
 }

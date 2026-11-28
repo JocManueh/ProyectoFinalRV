@@ -42,6 +42,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
     readonly Dictionary<AvisoNova, int> erroresFlash = new Dictionary<AvisoNova, int>();
     Button botonTerminar;
     int descuentos;
+    int picosSinResolver;
 
     public bool ResultadoConfirmado => paso == Paso.Final;
     [SerializeField, Min(1f)] float segundosParaResponder = 8f;
@@ -95,6 +96,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         socketCarga.selectFilters.Add(this);
         filtrosInstalados = true;
         reloj.OnChapterTimeUp += AgotarTiempo;
+        reloj.OnGlobalTimeUp += AgotarTiempo;
         if (!reloj.GlobalIniciado) reloj.IniciarGlobal();
         RefrescarTiempoGlobal();
         reloj.IniciarCapitulo(capitulo.tiempoSegundos);
@@ -333,6 +335,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
 
     void FallarPico()
     {
+        picosSinResolver++;
         ScoreSystem.Instance?.RegisterError(ErrorCode.E8_Tiempo, "Flash: pico sin resolver");
         debeBajarPalanca = palancaActiva;
         CambiarPaso(Paso.Estabilizar, "Se agotó la ventana. Baja y sube la palanca para reintentar.");
@@ -349,10 +352,14 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         }
 
         int puntos = Mathf.Max(0, puntosAlCompletar - descuentos);
-        int tiempoUsado = Mathf.CeilToInt(capitulo.tiempoSegundos - reloj.CapituloRestante);
+        float tiempoUsado = capitulo.tiempoSegundos - reloj.CapituloRestante;
+        var resultado = new ResultadoCapitulo(puntos, tiempoUsado, MotivosFlash());
         ScoreSystem.Instance?.Add(puntos, "Flash completado");
+        ScoreSystem.Instance?.GuardarFlash(resultado);
         Terminar(Paso.Final, $"Reacción confirmada. Flash completado. +{puntos} puntos.");
-        MostrarResultados(puntos, tiempoUsado);
+        reloj.DetenerTodo();
+        GameManager.Instance?.SetState(GameState.Resultado);
+        MostrarResultados(resultado);
     }
 
     void PrepararBotonTerminar()
@@ -370,32 +377,53 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         botonTerminar.onClick.AddListener(CerrarAplicacion);
     }
 
-    void MostrarResultados(int puntos, int segundos)
+    string MotivosFlash()
+    {
+        var texto = new StringBuilder();
+        foreach (var error in erroresFlash)
+        {
+            if (!ObtenerDescuento(error.Key, out _, out string motivo)) continue;
+            if (texto.Length > 0) texto.Append(" · ");
+            texto.Append(motivo);
+            if (error.Value > 1) texto.Append($" ×{error.Value}");
+        }
+        if (picosSinResolver > 0)
+        {
+            if (texto.Length > 0) texto.Append(" · ");
+            texto.Append($"Pico sin resolver ×{picosSinResolver} (sin descuento)");
+        }
+        return texto.ToString();
+    }
+
+    void MostrarResultados(ResultadoCapitulo flash)
     {
         if (tiempoGlobal != null) tiempoGlobal.gameObject.SetActive(false);
         if (subtitulosPanel != null) subtitulosPanel.gameObject.SetActive(false);
 
         if (panelResultados != null)
         {
+            ResultadoCapitulo spider = ScoreSystem.Instance?.ResultadoSpider;
             var texto = new StringBuilder();
-            texto.AppendLine($"<b>Puntos en Flash</b>  {puntos}/{puntosAlCompletar}");
-            texto.AppendLine($"<b>Tiempo total</b>  {TimerManager.Formato(segundos)}");
-            texto.AppendLine();
-            if (erroresFlash.Count == 0)
-                texto.Append("Sin descuentos de puntos.");
-            else
+            if (spider != null) EscribirResultado(texto, "Spider-Man", spider);
+            EscribirResultado(texto, "Flash", flash);
+            if (spider != null)
             {
-                texto.AppendLine("<b>Motivos del descuento</b>");
-                foreach (var error in erroresFlash)
-                {
-                    if (!ObtenerDescuento(error.Key, out int puntosPorError, out string motivo)) continue;
-                    texto.AppendLine($"{motivo} ×{error.Value}  (-{puntosPorError * error.Value})");
-                }
+                int puntos = spider.Puntos + flash.Puntos;
+                float tiempo = spider.SegundosJugados + flash.SegundosJugados;
+                texto.AppendLine($"<b>Total  {puntos} pts · {TimerManager.Formato(Mathf.Ceil(tiempo))}</b>");
             }
-            panelResultados.SetTexto("Resultados de Flash", $"<size=22>{texto}</size>");
+            panelResultados.SetTexto(spider != null ? "Resultados de la partida" : "Resultados de Flash", $"<size=22>{texto}</size>");
         }
 
         if (botonTerminar != null) botonTerminar.gameObject.SetActive(true);
+    }
+
+    static void EscribirResultado(StringBuilder texto, string nombre, ResultadoCapitulo resultado)
+    {
+        string tiempo = TimerManager.Formato(Mathf.Ceil(resultado.SegundosJugados));
+        texto.AppendLine($"<b>{nombre}  {resultado.Puntos} pts · {tiempo}</b>");
+        texto.AppendLine(string.IsNullOrEmpty(resultado.Motivos) ? "Sin errores registrados." : resultado.Motivos);
+        texto.AppendLine();
     }
 
     void CerrarAplicacion()
@@ -463,6 +491,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
             beberSuero.HabilitarAgarre(false);
         }
         reloj.OnChapterTimeUp -= AgotarTiempo;
+        reloj.OnGlobalTimeUp -= AgotarTiempo;
         reloj.DetenerCapitulo();
         socketMatraz.enabled = false;
         bobina.ApagarEfectosAmpolla();
@@ -651,6 +680,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         }
         if (reloj == null) return;
         reloj.OnChapterTimeUp -= AgotarTiempo;
+        reloj.OnGlobalTimeUp -= AgotarTiempo;
         if (poseeCuenta) reloj.DetenerCapitulo();
     }
 }

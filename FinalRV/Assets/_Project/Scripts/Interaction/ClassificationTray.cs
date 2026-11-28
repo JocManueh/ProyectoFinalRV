@@ -16,6 +16,7 @@ public class ClassificationTray : MonoBehaviour
     [SerializeField] AudioSource audioSource;
 
     public event Action<ClassificationTray> OnClasificacionCorrecta;
+    public event Action<ChemicalSO> OnReactivoClasificado;
     public bool TieneCorrecta { get; private set; }
 
     XRSocketInteractor socket;
@@ -57,6 +58,7 @@ public class ClassificationTray : MonoBehaviour
                 audioSource.PlayOneShot(SimpleTones.Beep(880f, 0.12f));
             if (HapticFeedback.Instance != null) HapticFeedback.Instance.Suave();
             OnClasificacionCorrecta?.Invoke(this);
+            if (!cont.EstaVacia) OnReactivoClasificado?.Invoke(cont.sustancia);
         }
         else
         {

@@ -26,7 +26,12 @@ public class ReactorController : MonoBehaviour
     public float TemperaturaActual { get; private set; }
     public bool Estable { get; private set; }
 
+    [SerializeField] bool esperarMezcla;
+    bool mezclaLista;
+
     public event Action OnEstable;
+
+    public void HabilitarEstabilizacion() => mezclaLista = true;
 
     float tiempoEnRango;
     bool yaAviso;
@@ -40,7 +45,7 @@ public class ReactorController : MonoBehaviour
 
         ActualizarVisual();
 
-        if (receta == null) return;
+        if (receta == null || (esperarMezcla && !mezclaLista)) return;
 
         bool enRango = TemperaturaActual >= receta.temperaturaRango.x &&
                        TemperaturaActual <= receta.temperaturaRango.y;
