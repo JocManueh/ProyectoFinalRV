@@ -2636,6 +2636,10 @@ PrefabInstance:
       propertyPath: m_InteractionLayers.m_Bits
       value: 4294967295
       objectReference: {fileID: 0}
+    - target: {fileID: 1514961456714376493, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1536830085860178572, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_SizeDelta.x
       value: 0.163
@@ -2643,6 +2647,10 @@ PrefabInstance:
     - target: {fileID: 1536830085860178572, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_SizeDelta.y
       value: 0.135
+      objectReference: {fileID: 0}
+    - target: {fileID: 1862796103232414582, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2778365231599067433, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_IsActive
@@ -2712,6 +2720,10 @@ PrefabInstance:
       propertyPath: m_RaycastTarget
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3950484012101767317, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5962000790160341684, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -2754,6 +2766,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8321179467791629534, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
       propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9187165650150485395, guid: fc17b402e87cc7d4ca8d5c5dd370015f, type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
