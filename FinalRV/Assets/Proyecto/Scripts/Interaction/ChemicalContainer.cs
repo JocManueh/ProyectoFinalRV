@@ -11,6 +11,7 @@ public class ChemicalContainer : MonoBehaviour
     public ChemicalSO sustancia;
     public int volumen = 10; // ml. 10 = una ampolla llena
     [SerializeField] Renderer liquidoRenderer;
+    [SerializeField] bool ocultarLiquidoAlVaciar;
     [SerializeField] TMP_Text etiqueta;
     [SerializeField] Color colorVacio = Color.gray;
 
@@ -22,6 +23,9 @@ public class ChemicalContainer : MonoBehaviour
     {
         if (liquidoRenderer != null)
         {
+            if (ocultarLiquidoAlVaciar)
+                liquidoRenderer.enabled = !EstaVacia;
+
             // Usar sharedMaterial en edit mode para evitar leaks
             var mat = Application.isPlaying
                 ? liquidoRenderer.material
