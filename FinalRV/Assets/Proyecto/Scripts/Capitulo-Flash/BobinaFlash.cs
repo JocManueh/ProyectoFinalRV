@@ -1,10 +1,9 @@
-// Inicia la carga al hundir el botón físico y entrega la ampolla
-// si el condensador permanece en el socket durante tres segundos.
 using TMPro;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
+/// <summary>Carga la ampolla y controla los efectos de Tesla y de la ampolla.</summary>
 public class BobinaFlash : MonoBehaviour
 {
     public XRSocketInteractor socket;
@@ -12,11 +11,31 @@ public class BobinaFlash : MonoBehaviour
     public GameObject ampollaCarga;
     public TMP_Text textoCarga;
 
+    [Header("Efectos de Flash")]
+    [SerializeField] GameObject efectoVisualBobina;
+    [SerializeField] GameObject efectoSonidoBobina;
+    [SerializeField] GameObject efectoVisualAmpolla;
+    [SerializeField] AudioSource sonidoAmpolla;
+
     public event System.Action CargaInterrumpida;
 
     float tiempo;
     bool cargando;
     bool entregada;
+
+    public void MostrarEfectosDePaso(bool activo)
+    {
+        if (efectoVisualBobina != null) efectoVisualBobina.SetActive(activo);
+        if (efectoSonidoBobina != null) efectoSonidoBobina.SetActive(activo);
+    }
+
+    public void ApagarEfectosAmpolla()
+    {
+        if (sonidoAmpolla != null) sonidoAmpolla.Stop();
+        if (efectoVisualAmpolla != null) efectoVisualAmpolla.SetActive(false);
+    }
+
+    void OnDisable() => MostrarEfectosDePaso(false);
 
     void Start()
     {
