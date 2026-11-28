@@ -120,7 +120,7 @@ public class Cap1Manager : MonoBehaviour
         ultimoSegundoGlobal = global;
         string capituloTexto = $"Nivel {TimerManager.Formato(nivel)}";
         string globalTexto = $"Global {TimerManager.Formato(global)}";
-        if (tiempoNivel != null) tiempoNivel.text = $"{capituloTexto} | {globalTexto}";
+        if (tiempoNivel != null) tiempoNivel.text = capituloTexto;
         if (globalEnPanel != null) globalEnPanel.text = globalTexto;
         panelNivel?.SetTexto(TituloNivel, $"{DescripcionNivel}\n\nTiempo de capítulo  {TimerManager.Formato(nivel)}");
     }
