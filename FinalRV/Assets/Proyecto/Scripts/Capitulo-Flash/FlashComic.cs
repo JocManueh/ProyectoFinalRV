@@ -32,6 +32,7 @@ public class FlashComic : MonoBehaviour
 
     public void AbrirHistoria()
     {
+        if (nivel != null && nivel.ResultadoConfirmado) return;
         if (panel != null) panel.SetTexto("La historia de Flash", Historia);
         if (nivel != null) nivel.RevelarReceta();
     }

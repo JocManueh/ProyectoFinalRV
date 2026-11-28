@@ -15,7 +15,6 @@ public class BobinaFlash : MonoBehaviour
     [SerializeField] GameObject efectoVisualBobina;
     [SerializeField] GameObject efectoSonidoBobina;
     [SerializeField] GameObject efectoVisualAmpolla;
-    [SerializeField] AudioSource sonidoAmpolla;
 
     public event System.Action CargaInterrumpida;
 
@@ -31,7 +30,6 @@ public class BobinaFlash : MonoBehaviour
 
     public void ApagarEfectosAmpolla()
     {
-        if (sonidoAmpolla != null) sonidoAmpolla.Stop();
         if (efectoVisualAmpolla != null) efectoVisualAmpolla.SetActive(false);
     }
 

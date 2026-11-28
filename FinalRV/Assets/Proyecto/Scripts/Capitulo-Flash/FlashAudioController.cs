@@ -10,7 +10,7 @@ public class FlashAudioController : MonoBehaviour
     {
         Bienvenida, Ingredientes, Tesla, Carga, Matraz, Estabilizar, Pico, Confirmar, Exito,
         Bandeja, Compuestos, Condensador, CargaInterrumpida, Vacia, Reactivo,
-        CargaAnticipada, Cantidad, Orden, PicoFallido, UnMinuto, TiempoAgotado
+        CargaAnticipada, Cantidad, Orden, PicoFallido, UnMinuto, TiempoAgotado, SueroListo
     }
 
     static readonly string[] Subtitulos =
@@ -35,7 +35,8 @@ public class FlashAudioController : MonoBehaviour
         "Esa dosis va después. Mira qué ingrediente pide el matraz.",
         "Se acabó la ventana. Baja y vuelve a subir la palanca.",
         "Doctor, queda un minuto para terminar.",
-        "Tiempo agotado, doctor. La misión queda incompleta."
+        "Tiempo agotado, doctor. La misión queda incompleta.",
+        "Suero listo, doctor. Toma el matraz, inclínalo hacia tu boca y mantenlo ahí tres segundos. Luego usa el stick para probar la velocidad."
     };
 
     [SerializeField] AudioSource fuenteNova;
@@ -81,7 +82,7 @@ public class FlashAudioController : MonoBehaviour
     {
         if (!activo) return;
         if (aviso == Aviso.Pico || aviso == Aviso.PicoFallido ||
-            (aviso == Aviso.Confirmar && actual == Aviso.Pico))
+            ((aviso == Aviso.Confirmar || aviso == Aviso.SueroListo) && actual == Aviso.Pico))
             LimpiarLocucion();
 
         if (actual == aviso || pendientes.Contains(aviso)) return;
@@ -113,7 +114,7 @@ public class FlashAudioController : MonoBehaviour
         {
             Aviso aviso = pendientes.Dequeue();
             actual = aviso;
-            bool paso = aviso >= Aviso.Ingredientes && aviso <= Aviso.Exito;
+            bool paso = (aviso >= Aviso.Ingredientes && aviso <= Aviso.Exito) || aviso == Aviso.SueroListo;
             AudioClip efecto = EsError(aviso) ? efectoError : paso ? pasoConfirmado : null;
             if (efecto != null)
             {

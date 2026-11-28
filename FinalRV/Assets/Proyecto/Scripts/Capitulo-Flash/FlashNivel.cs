@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
 using AvisoNova = FlashAudioController.Aviso;
 using UnityEngine.XR.Interaction.Toolkit.Filtering;
@@ -11,13 +12,13 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 /// <summary>Coordina las estaciones de Flash y actualiza el progreso y el tiempo de la escena.</summary>
 public class FlashNivel : MonoBehaviour, IXRSelectFilter
 {
-    enum Paso { Clasificar, Bobina, ClasificarCarga, Mezclar, Estabilizar, Pico, Confirmar, Final, TiempoAgotado }
+    enum Paso { Clasificar, Bobina, ClasificarCarga, Mezclar, Estabilizar, Pico, Beber, Confirmar, Final, TiempoAgotado }
 
     static readonly string[] Objetivos =
     {
         "Preparar los compuestos", "Cargar la bobina",
         "Clasificar la carga", "Preparar la mezcla", "Estabilizar con la palanca",
-        "Responder al pico de energía", "Confirmar el resultado"
+        "Responder al pico de energía", "Beber el suero", "Confirmar el resultado"
     };
 
     [Header("Datos y estaciones de la escena")]
@@ -26,6 +27,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
     [SerializeField] XRSocketInteractor socketCarga;
     [SerializeField] BobinaFlash bobina;
     [SerializeField] MatrazFlash matraz;
+    [SerializeField] FlashBeberSuero beberSuero;
     [SerializeField] XRSocketInteractor socketMatraz;
 
     [Header("Retroalimentación")]
@@ -34,6 +36,14 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
     [SerializeField] TMP_Text tiempoNivel;
     [SerializeField] TMP_Text tiempoGlobal;
     [SerializeField] TMP_Text listaPasos;
+    [SerializeField] PanelUI panelResultados;
+    [SerializeField] TMP_Text subtitulosPanel;
+
+    readonly Dictionary<AvisoNova, int> erroresFlash = new Dictionary<AvisoNova, int>();
+    Button botonTerminar;
+    int descuentos;
+
+    public bool ResultadoConfirmado => paso == Paso.Final;
     [SerializeField, Min(1f)] float segundosParaResponder = 8f;
     [SerializeField, Min(0)] int puntosAlCompletar = 100;
 
@@ -66,6 +76,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
 
     void Start()
     {
+        PrepararBotonTerminar();
         reloj = TimerManager.Instance;
         if (reloj == null || capitulo == null || capitulo.receta == null || panel == null ||
             socketCarga == null || socketsCompuestos == null ||
@@ -137,6 +148,14 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
 
         if (paso == Paso.Pico && ahora >= limitePico)
             FallarPico();
+
+        if (paso == Paso.Beber && beberSuero.ActualizarGesto(Time.unscaledDeltaTime))
+        {
+            matraz.VaciarSuero();
+            beberSuero.IniciarPoder();
+            CambiarPaso(Paso.Confirmar, "Poder activo. Usa el stick y pulsa CONFIRMAR cuando termines.");
+            AvisarNova(AvisoNova.Confirmar);
+        }
 
         RefrescarPanel();
     }
@@ -300,8 +319,16 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
             return;
         }
 
-        CambiarPaso(Paso.Confirmar, "Pico resuelto. Pulsa CONFIRMAR.");
-        AvisarNova(AvisoNova.Confirmar);
+        if (beberSuero == null)
+        {
+            CambiarPaso(Paso.Confirmar, "Pico resuelto. Pulsa CONFIRMAR.");
+            AvisarNova(AvisoNova.Confirmar);
+            return;
+        }
+
+        CambiarPaso(Paso.Beber, "Toma el matraz y apunta hacia tu boca durante tres segundos.");
+        beberSuero.HabilitarAgarre(true);
+        AvisarNova(AvisoNova.SueroListo);
     }
 
     void FallarPico()
@@ -321,8 +348,104 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
             return;
         }
 
-        ScoreSystem.Instance?.Add(puntosAlCompletar, "Flash completado");
-        Terminar(Paso.Final, $"Reacción confirmada. Flash completado. +{puntosAlCompletar} puntos.");
+        int puntos = Mathf.Max(0, puntosAlCompletar - descuentos);
+        int tiempoUsado = Mathf.CeilToInt(capitulo.tiempoSegundos - reloj.CapituloRestante);
+        ScoreSystem.Instance?.Add(puntos, "Flash completado");
+        Terminar(Paso.Final, $"Reacción confirmada. Flash completado. +{puntos} puntos.");
+        MostrarResultados(puntos, tiempoUsado);
+    }
+
+    void PrepararBotonTerminar()
+    {
+        if (panelResultados == null) return;
+
+        botonTerminar = panelResultados.GetComponentInChildren<Button>(true);
+        if (botonTerminar == null) return;
+
+        botonTerminar.gameObject.SetActive(false);
+        var etiqueta = botonTerminar.GetComponentInChildren<TMP_Text>(true);
+        if (etiqueta != null) etiqueta.text = "Terminar";
+
+        botonTerminar.onClick = new Button.ButtonClickedEvent();
+        botonTerminar.onClick.AddListener(CerrarAplicacion);
+    }
+
+    void MostrarResultados(int puntos, int segundos)
+    {
+        if (tiempoGlobal != null) tiempoGlobal.gameObject.SetActive(false);
+        if (subtitulosPanel != null) subtitulosPanel.gameObject.SetActive(false);
+
+        if (panelResultados != null)
+        {
+            var texto = new StringBuilder();
+            texto.AppendLine($"<b>Puntos en Flash</b>  {puntos}/{puntosAlCompletar}");
+            texto.AppendLine($"<b>Tiempo total</b>  {TimerManager.Formato(segundos)}");
+            texto.AppendLine();
+            if (erroresFlash.Count == 0)
+                texto.Append("Sin descuentos de puntos.");
+            else
+            {
+                texto.AppendLine("<b>Motivos del descuento</b>");
+                foreach (var error in erroresFlash)
+                {
+                    if (!ObtenerDescuento(error.Key, out int puntosPorError, out string motivo)) continue;
+                    texto.AppendLine($"{motivo} ×{error.Value}  (-{puntosPorError * error.Value})");
+                }
+            }
+            panelResultados.SetTexto("Resultados de Flash", $"<size=22>{texto}</size>");
+        }
+
+        if (botonTerminar != null) botonTerminar.gameObject.SetActive(true);
+    }
+
+    void CerrarAplicacion()
+    {
+        if (!ResultadoConfirmado) return;
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
+    static bool ObtenerDescuento(AvisoNova error, out int puntos, out string motivo)
+    {
+        ErrorCode codigo;
+        switch (error)
+        {
+            case AvisoNova.Bandeja:
+                codigo = ErrorCode.E3_Incorrecto;
+                motivo = "Ampolla en bandeja incorrecta";
+                break;
+            case AvisoNova.Reactivo:
+                codigo = ErrorCode.E3_Incorrecto;
+                motivo = "Ingrediente fuera de la receta";
+                break;
+            case AvisoNova.CargaAnticipada:
+                codigo = ErrorCode.E3_Incorrecto;
+                motivo = "Añadiste la carga demasiado pronto";
+                break;
+            case AvisoNova.Vacia:
+                codigo = ErrorCode.E1_Vacio;
+                motivo = "Usaste una ampolla vacía";
+                break;
+            case AvisoNova.Cantidad:
+                codigo = ErrorCode.E4_Cantidad;
+                motivo = "Cantidad incorrecta";
+                break;
+            case AvisoNova.Orden:
+                codigo = ErrorCode.E5_Orden;
+                motivo = "Ingrediente fuera de orden";
+                break;
+            default:
+                puntos = 0;
+                motivo = "";
+                return false;
+        }
+
+        puntos = ScoreSystem.PenalizacionDe(codigo);
+        return puntos > 0;
     }
 
     void AgotarTiempo()
@@ -334,6 +457,11 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
     void Terminar(Paso resultado, string mensaje)
     {
         poseeCuenta = false;
+        if (beberSuero != null)
+        {
+            beberSuero.RestaurarVelocidad();
+            beberSuero.HabilitarAgarre(false);
+        }
         reloj.OnChapterTimeUp -= AgotarTiempo;
         reloj.DetenerCapitulo();
         socketMatraz.enabled = false;
@@ -386,7 +514,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
 
     void RefrescarTiempoGlobal()
     {
-        if (reloj == null || tiempoGlobal == null) return;
+        if (reloj == null || tiempoGlobal == null || ResultadoConfirmado) return;
 
         int segundos = Mathf.CeilToInt(reloj.GlobalRestante);
         if (segundosGlobalesMostrados == segundos) return;
@@ -404,13 +532,15 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         }
 
         int actual = paso == Paso.TiempoAgotado ? ultimoPasoJugado : (int)paso;
-        if (pasoMostrado == actual || listaPasos == null) return;
+        if (listaPasos == null || (pasoMostrado == actual && paso != Paso.Beber)) return;
         pasoMostrado = actual;
         var lista = new StringBuilder();
         for (int i = 0; i < Objetivos.Length; i++)
         {
             if (i > 0) lista.Append('\n');
             string renglon = $"{i + 1}. {Objetivos[i]}";
+            if (i == actual && paso == Paso.Beber)
+                renglon += $" ({beberSuero.Progreso})";
             if (i == actual)
                 lista.Append("<b>").Append(renglon).Append("</b>");
             else if (i == actual - 1)
@@ -443,6 +573,8 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
             detalle = $"\nCompuestos en bandeja: {colocadas}/{totalCompuestos}";
         else if (paso == Paso.Estabilizar && palancaActiva && !debeBajarPalanca)
             detalle = $"\nEstabilidad: {Mathf.Min(SegundosEstable, Time.unscaledTime - estableDesde):0.0}/{SegundosEstable:0.0} s";
+        else if (paso == Paso.Beber)
+            detalle = "\n" + beberSuero.Progreso;
         else if (paso == Paso.Pico)
             detalle = $"\nTiempo para responder: {Mathf.CeilToInt(Mathf.Max(0f, limitePico - Time.unscaledTime))} s";
 
@@ -453,7 +585,15 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
 
     void AvisarNova(AvisoNova avisoNova)
     {
-        if (EnCurso && audioFlash != null) audioFlash.Avisar(avisoNova);
+        if (!EnCurso) return;
+
+        if (ObtenerDescuento(avisoNova, out int puntos, out _))
+        {
+            erroresFlash.TryGetValue(avisoNova, out int cantidad);
+            erroresFlash[avisoNova] = cantidad + 1;
+            descuentos += puntos;
+        }
+        if (audioFlash != null) audioFlash.Avisar(avisoNova);
     }
 
     void AvisarCargaInterrumpida() => AvisarNova(AvisoNova.CargaInterrumpida);
@@ -494,6 +634,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
 
     void OnDestroy()
     {
+        if (beberSuero != null) beberSuero.RestaurarVelocidad();
         if (matraz != null)
         {
             matraz.ErrorDosis -= AvisarNova;

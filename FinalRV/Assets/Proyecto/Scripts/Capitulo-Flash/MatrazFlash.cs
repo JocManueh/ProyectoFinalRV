@@ -27,6 +27,7 @@ public class MatrazFlash : MonoBehaviour
     Vector3 escalaLlena;
     float fondoLocal;
     float altura;
+    bool sueroBebido;
     int paso;
     int dosisDelPaso;
     int dosisAgregadas;
@@ -118,6 +119,14 @@ public class MatrazFlash : MonoBehaviour
         Mostrar(Completa ? "Mezcla completa." : $"Mezcla {dosisAgregadas}/{dosisTotales}");
     }
 
+    public void VaciarSuero()
+    {
+        sueroBebido = true;
+        if (liquido != null) AplicarAltura(0f);
+        if (efectoFinal != null) efectoFinal.SetActive(false);
+        Mostrar("Suero bebido.");
+    }
+
     void PrepararLiquido()
     {
         if (efectoFinal != null) efectoFinal.SetActive(false);
@@ -152,7 +161,7 @@ public class MatrazFlash : MonoBehaviour
     {
         if (liquido == null || dosisTotales == 0) return;
 
-        float objetivo = (float)dosisAgregadas / dosisTotales;
+        float objetivo = sueroBebido ? 0f : (float)dosisAgregadas / dosisTotales;
         if (altura == objetivo) return;
 
         float velocidad = 1f / (dosisTotales * segundosPorDosis);
