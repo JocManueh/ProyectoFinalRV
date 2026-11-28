@@ -229,7 +229,8 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
         ActualizarNivel();
 
         amp.Vaciar();
-
+        // Mantiene la ampolla seleccionada durante el vertido y después libera el socket.
+        Destroy(amp.gameObject, 0.5f);
     }
 
     void ActualizarNivel()
