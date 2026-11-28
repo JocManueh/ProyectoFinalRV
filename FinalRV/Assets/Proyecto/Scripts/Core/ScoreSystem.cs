@@ -49,6 +49,7 @@ public class ScoreSystem : MonoBehaviour
     public int TotalScore { get; private set; }
     public List<ErrorLog> Log { get; private set; } = new List<ErrorLog>();
     public event Action<int> OnScoreChanged;
+    public event Action<ErrorLog> OnErrorRegistrado;
     public ResultadoCapitulo ResultadoSpider { get; private set; }
     public ResultadoCapitulo ResultadoFlash { get; private set; }
 
@@ -150,14 +151,16 @@ public class ScoreSystem : MonoBehaviour
     public void RegisterError(ErrorCode codigo, string detalle = "")
     {
         int pen = PenalizacionDe(codigo);
-        Log.Add(new ErrorLog
+        var entrada = new ErrorLog
         {
             codigo = codigo.ToString(),
             detalle = detalle,
             penalizacion = pen,
             segundos = Time.unscaledTime
-        });
+        };
+        Log.Add(entrada);
         Add(-pen, $"{codigo} {detalle}");
+        OnErrorRegistrado?.Invoke(entrada);
     }
 
     public void ResetAll()
