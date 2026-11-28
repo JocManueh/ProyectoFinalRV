@@ -25,6 +25,8 @@ public class Cap1Manager : MonoBehaviour
     [SerializeField] TMP_Text tiempoNivel;
     [SerializeField] TMP_Text globalEnPanel;
     [SerializeField] PanelUI panelNivel;
+    [SerializeField] SpiderAudioController audioSpider;
+    bool avisoUnMinuto;
 
     const string TituloNivel = "Nivel 1 · Spider-Man";
     const string DescripcionNivel = "Doctor, investiga el origen del poder arácnido. Coloca el cómic, revela las pistas y prepara el suero. Cuando el reactor esté estable, pulsa ANALIZAR.";
@@ -74,6 +76,7 @@ public class Cap1Manager : MonoBehaviour
         {
             if (reloj != null && !reloj.GlobalIniciado) reloj.IniciarGlobal();
             ScoreSystem.Instance?.IniciarSpider();
+            audioSpider?.Iniciar();
         }
         ActualizarRelojes();
     }
@@ -86,6 +89,13 @@ public class Cap1Manager : MonoBehaviour
         {
             AgotarTiempo();
             return;
+        }
+        if (!avisoUnMinuto && reloj != null &&
+            ((iniciado && reloj.CapituloRestante <= 60f) ||
+             (reloj.GlobalIniciado && reloj.GlobalRestante <= 60f)))
+        {
+            avisoUnMinuto = true;
+            audioSpider?.UnMinuto();
         }
         if (!iniciado) return;
 
@@ -160,6 +170,7 @@ public class Cap1Manager : MonoBehaviour
         if (indice == 5 && reactor != null) reactor.HabilitarEstabilizacion();
         ScoreSystem.Instance?.Add(puntosPorTarea, $"Cap1 tarea {indice}");
         checklist?.Completar(indice);
+        audioSpider?.PasoCompletado(indice);
     }
 
     public void Analizar()
@@ -180,7 +191,8 @@ public class Cap1Manager : MonoBehaviour
             if (completados[i]) continue;
             string aviso = $"Falta: {ChapterChecklist.NombrePaso(i)}.";
             validator.MostrarAviso(aviso);
-            NOVA.Instance?.Say(aviso);
+            if (audioSpider != null) audioSpider.FaltaPaso(aviso);
+            else NOVA.Instance?.Say(aviso);
             return;
         }
 
@@ -209,6 +221,7 @@ public class Cap1Manager : MonoBehaviour
             ? capitulo.tiempoSegundos - reloj.CapituloRestante
             : 0f;
         ScoreSystem.Instance?.GuardarSpider(segundos);
+        audioSpider?.Cerrar(true);
         dron?.Activar(capitulo?.receta?.displayName ?? "Suero Arácnido");
         StartCoroutine(AbrirFlash());
     }
@@ -220,12 +233,14 @@ public class Cap1Manager : MonoBehaviour
         reloj?.DetenerCapitulo();
         ScoreSystem.Instance?.RegisterError(ErrorCode.E8_Tiempo, "Tiempo del capítulo agotado");
         validator?.MostrarAviso("Tiempo agotado.");
-        NOVA.Instance?.Say("Tiempo agotado. Reinicia el capítulo para volver a intentarlo.");
+        if (audioSpider != null) audioSpider.Cerrar(false);
+        else NOVA.Instance?.Say("Tiempo agotado. Reinicia el capítulo para volver a intentarlo.");
     }
 
     IEnumerator AbrirFlash()
     {
         yield return new WaitForSecondsRealtime(3f);
+        while (audioSpider != null && audioSpider.Reproduciendo) yield return null;
         SceneManager.LoadSceneAsync(escenaFlash, LoadSceneMode.Single);
     }
 }

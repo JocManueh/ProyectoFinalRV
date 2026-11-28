@@ -6,6 +6,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
+/// <summary>Guía la práctica inicial, controla su tiempo y abre el laboratorio al completarla.</summary>
 public class OnboardingManager : MonoBehaviour
 {
     public const string PrefKey = "onboarding_completado";
@@ -31,6 +32,7 @@ public class OnboardingManager : MonoBehaviour
     [SerializeField] string escenaSiguiente = "01_Laboratorio";
     [SerializeField] int puntosPorTarea = 20;
     [SerializeField] float segundosAntesDeCargar = 4f;
+    [SerializeField, Min(1f)] float tiempoLimite = 300f;
     [Tooltip("Pruebas: true = siempre hace el onboarding aunque ya lo hayas completado.")]
     [SerializeField] bool ignorarBandera = true;
     [Tooltip("Desarrollo: F1 completa la tarea pendiente. Apágalo en la entrega.")]
@@ -56,6 +58,9 @@ public class OnboardingManager : MonoBehaviour
 
     readonly bool[] hechas = new bool[5];
     float tiempoZona;
+    TimerManager reloj;
+    int ultimoSegundo = -1;
+    bool intentado;
     bool terminado;
 
     void Start()
@@ -63,16 +68,26 @@ public class OnboardingManager : MonoBehaviour
         if (GameManager.Instance != null) GameManager.Instance.SetState(GameState.Onboarding);
         if (ScoreSystem.Instance != null) ScoreSystem.Instance.ResetAll();
         if (luzBoton != null) luzBoton.SetActive(false);
-
-                if (!ignorarBandera && PlayerPrefs.GetInt(PrefKey, 0) == 1)
+        reloj = TimerManager.Instance;
+        if (reloj != null)
         {
+            reloj.IniciarGlobal();
+            reloj.DetenerCapitulo();
+        }
+
+        if (!ignorarBandera && PlayerPrefs.GetInt(PrefKey, 0) == 1)
+        {
+            terminado = true;
             Decir("Ya completaste la simulación. Entrando al laboratorio.");
             StartCoroutine(CargarSiguiente());
             return;
         }
 
+        intentado = true;
+        reloj?.IniciarCapitulo(tiempoLimite);
         Conectar();
         Refrescar();
+        if (hint != null) hint.Mostrar(0);
         Decir("Bienvenido, doctor. Antes de tocar reactivos, practiquemos en el simulador. Camina hasta la marca verde y gira.");
     }
 
@@ -96,7 +111,17 @@ public class OnboardingManager : MonoBehaviour
 
     void Update()
     {
-        if (terminado || palanca == null || hechas[4]) return;
+        if (terminado || !intentado) return;
+        if (reloj != null)
+        {
+            if (reloj.CapituloRestante <= 0f)
+            {
+                AgotarTiempo();
+                return;
+            }
+            if (Mathf.CeilToInt(reloj.CapituloRestante) != ultimoSegundo) Refrescar();
+        }
+        if (palanca == null || hechas[4]) return;
 
         bool enZona = palanca.valor >= zonaMin && palanca.valor <= zonaMax;
         if (enZona)
@@ -133,6 +158,11 @@ public class OnboardingManager : MonoBehaviour
     public void Completar(int i)
     {
         if (terminado || i < 0 || i >= hechas.Length || hechas[i]) return;
+        if (reloj != null && intentado && reloj.CapituloRestante <= 0f)
+        {
+            AgotarTiempo();
+            return;
+        }
         hechas[i] = true;
 
         if (i == 3 && luzBoton != null) luzBoton.SetActive(true);
@@ -147,6 +177,7 @@ public class OnboardingManager : MonoBehaviour
         {
             terminado = true;
             if (hint != null) hint.Ocultar();
+            reloj?.DetenerCapitulo();
             Decir("Simulación completa.");
             StartCoroutine(CargarSiguiente());
         }
@@ -159,14 +190,33 @@ public class OnboardingManager : MonoBehaviour
 
     void Refrescar()
     {
+        ultimoSegundo = Mathf.CeilToInt(reloj != null ? reloj.CapituloRestante : tiempoLimite);
         var sb = new StringBuilder();
+        sb.AppendLine($"Tiempo de práctica  {TimerManager.Formato(ultimoSegundo)}");
+        sb.AppendLine();
         for (int i = 0; i < nombres.Length; i++)
             sb.AppendLine((hechas[i] ? "[X] " : "[  ] ") + nombres[i]);
 
         if (panelChecklist != null) panelChecklist.SetTexto("Simulación NOVA", sb.ToString());
 
-        int sig = Siguiente();
-        if (hint != null && sig >= 0) hint.Mostrar(sig);
+    }
+
+    void AgotarTiempo()
+    {
+        if (terminado) return;
+        terminado = true;
+        reloj?.DetenerTodo();
+        if (hint != null) hint.Ocultar();
+        panelChecklist?.SetTexto("Simulación NOVA", "Tiempo agotado. Reiniciando la práctica.");
+        NOVA.Instance?.Limpiar();
+        Decir("Se acabó el tiempo. Volvamos a intentar la práctica.");
+        StartCoroutine(ReiniciarPractica());
+    }
+
+    IEnumerator ReiniciarPractica()
+    {
+        yield return new WaitForSecondsRealtime(segundosAntesDeCargar);
+        SceneManager.LoadScene(gameObject.scene.name);
     }
 
     IEnumerator CargarSiguiente()

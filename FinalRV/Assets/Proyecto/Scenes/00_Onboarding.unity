@@ -5104,6 +5104,7 @@ MonoBehaviour:
   escenaSiguiente: 01_Laboratorio
   puntosPorTarea: 20
   segundosAntesDeCargar: 4
+  tiempoLimite: 300
   ignorarBandera: 1
   permitirSaltar: 1
 --- !u!4 &768689575

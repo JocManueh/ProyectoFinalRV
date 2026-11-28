@@ -1,5 +1,5 @@
 /*
- * DESCRIPCIÓN: Controla los dos cronómetros del juego: el tiempo límite global de 15 minutos 
+ * DESCRIPCIÓN: Controla los dos cronómetros del juego: el tiempo límite global de 25 minutos 
  * y el reloj de cada capítulo. Mide el tiempo real sin verse afectado cuando el juego 
  * entra en cámara lenta y avisa cuando el tiempo llega a cero.
  */
@@ -11,7 +11,7 @@ public class TimerManager : MonoBehaviour
     public static TimerManager Instance { get; private set; }
 
     [Header("Tiempo global (la Cosecha)")]
-    public float segundosGlobal = 900f; // 15:00
+    public float segundosGlobal = 1500f; // 25:00
     public float GlobalRestante { get; private set; }
     public float CapituloRestante { get; private set; }
     public bool GlobalCorriendo { get; private set; }
