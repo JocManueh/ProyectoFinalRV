@@ -5,10 +5,13 @@
 using TMPro;
 using System.Text;
 using UnityEngine;
+using System; // Agrega esta línea al inicio del archivo
 
 public class ChapterChecklist : MonoBehaviour
 {
     [SerializeField] TMP_Text cuerpo;
+
+
 
     static readonly string[] items =
     {
@@ -27,12 +30,15 @@ public class ChapterChecklist : MonoBehaviour
 
     void Start() => Refrescar();
 
+    public event Action<int> OnCompletado;
+
     public void Completar(int idx)
     {
         if (idx < 0 || idx >= hechos.Length || hechos[idx]) return;
         hechos[idx] = true;
         Debug.Log($"[Checklist] ✅ {items[idx]}");
         Refrescar();
+        OnCompletado?.Invoke(idx);   // NUEVO
     }
 
     public bool TodoCompleto()
@@ -48,5 +54,13 @@ public class ChapterChecklist : MonoBehaviour
         for (int i = 0; i < items.Length; i++)
             sb.AppendLine((hechos[i] ? "[X] " : "[  ] ") + items[i]);
         cuerpo.text = sb.ToString();
+    }
+
+
+
+    public int SiguientePendiente()
+    {
+        for (int i = 0; i < hechos.Length; i++) if (!hechos[i]) return i;
+        return -1;
     }
 }
