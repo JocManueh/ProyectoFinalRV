@@ -5510,6 +5510,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 635706799530904541, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
+      propertyPath: m_text
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 768491884317680659, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
+      propertyPath: m_text
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 944191179787724397, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
+      propertyPath: m_Name
+      value: PanelUI Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 6802072565758799757, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
+      propertyPath: m_text
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 8998600358476314076, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -5589,10 +5605,6 @@ PrefabInstance:
     - target: {fileID: 8998600358476314076, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 944191179787724397, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
-      propertyPath: m_Name
-      value: PanelUI Variant
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6046,7 +6058,7 @@ Transform:
   m_GameObject: {fileID: 862492678}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 16.502, y: 1.262, z: 13.135}
+  m_LocalPosition: {x: 16.502, y: 1.262, z: 13.296}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10491,7 +10503,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1675833964}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e500ac2b6b2751047a0efef8c5026068, type: 3}
   m_Name: 
