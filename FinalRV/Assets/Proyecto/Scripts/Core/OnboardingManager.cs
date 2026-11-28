@@ -28,6 +28,20 @@ public class OnboardingManager : MonoBehaviour
     [SerializeField] PanelUI panelChecklist;
     [SerializeField] InputHintUI hint;
 
+    [Header("Audio de NOVA")]
+    [SerializeField] AudioClip bienvenida;
+    [SerializeField] AudioClip indicacionProbeta;
+    [SerializeField] AudioClip indicacionMatraz;
+    [SerializeField] AudioClip indicacionBoton;
+    [SerializeField] AudioClip indicacionPalanca;
+    [SerializeField] AudioClip exito;
+    [SerializeField] AudioClip tiempoAgotado;
+    [SerializeField] AudioClip retorno;
+    [SerializeField] AudioClip efectoPaso;
+    [SerializeField] AudioClip efectoError;
+    [SerializeField] AudioClip relojNormal;
+    [SerializeField, Range(0f, 1f)] float volumenReloj = 0.18f;
+
     [Header("Flujo")]
     [SerializeField] string escenaSiguiente = "01_Laboratorio";
     [SerializeField] int puntosPorTarea = 20;
@@ -57,6 +71,8 @@ public class OnboardingManager : MonoBehaviour
     };
 
     readonly bool[] hechas = new bool[5];
+    AudioClip[] vocesDePasos;
+    NOVA nova;
     float tiempoZona;
     TimerManager reloj;
     int ultimoSegundo = -1;
@@ -69,6 +85,8 @@ public class OnboardingManager : MonoBehaviour
         if (ScoreSystem.Instance != null) ScoreSystem.Instance.ResetAll();
         if (luzBoton != null) luzBoton.SetActive(false);
         reloj = TimerManager.Instance;
+        nova = NOVA.Instance;
+        vocesDePasos = new[] { indicacionProbeta, indicacionMatraz, indicacionBoton, indicacionPalanca, null };
         if (reloj != null)
         {
             reloj.IniciarGlobal();
@@ -78,7 +96,7 @@ public class OnboardingManager : MonoBehaviour
         if (!ignorarBandera && PlayerPrefs.GetInt(PrefKey, 0) == 1)
         {
             terminado = true;
-            Decir("Ya completaste la simulación. Entrando al laboratorio.");
+            Decir("Ya completaste la simulación. Entrando al laboratorio.", retorno);
             StartCoroutine(CargarSiguiente());
             return;
         }
@@ -88,7 +106,8 @@ public class OnboardingManager : MonoBehaviour
         Conectar();
         Refrescar();
         if (hint != null) hint.Mostrar(0);
-        Decir("Bienvenido, doctor. Antes de tocar reactivos, practiquemos en el simulador. Camina hasta la marca verde y gira.");
+        if (nova != null) nova.IniciarAmbiente(relojNormal, volumenReloj);
+        Decir("Bienvenido, doctor. Antes de tocar reactivos, practiquemos en el simulador. Camina hasta la marca verde y gira.", bienvenida);
     }
 
     void Conectar()
@@ -178,12 +197,12 @@ public class OnboardingManager : MonoBehaviour
             terminado = true;
             if (hint != null) hint.Ocultar();
             reloj?.DetenerCapitulo();
-            Decir("Simulación completa.");
+            CerrarLocucion("Simulación completa.", exito, efectoPaso);
             StartCoroutine(CargarSiguiente());
         }
         else
         {
-            if (!string.IsNullOrEmpty(frasesNova[i])) Decir(frasesNova[i]);
+            Decir(frasesNova[i], vocesDePasos[i], efectoPaso);
             if (hint != null) hint.Mostrar(sig);
         }
     }
@@ -208,14 +227,19 @@ public class OnboardingManager : MonoBehaviour
         reloj?.DetenerTodo();
         if (hint != null) hint.Ocultar();
         panelChecklist?.SetTexto("Simulación NOVA", "Tiempo agotado. Reiniciando la práctica.");
-        NOVA.Instance?.Limpiar();
-        Decir("Se acabó el tiempo. Volvamos a intentar la práctica.");
+        CerrarLocucion("Se acabó el tiempo. Volvamos a intentar la práctica.", tiempoAgotado, efectoError);
         StartCoroutine(ReiniciarPractica());
+    }
+
+    IEnumerator EsperarSalida()
+    {
+        yield return new WaitForSecondsRealtime(segundosAntesDeCargar);
+        while (nova != null && nova.EstaHablando) yield return null;
     }
 
     IEnumerator ReiniciarPractica()
     {
-        yield return new WaitForSecondsRealtime(segundosAntesDeCargar);
+        yield return EsperarSalida();
         SceneManager.LoadScene(gameObject.scene.name);
     }
 
@@ -224,7 +248,7 @@ public class OnboardingManager : MonoBehaviour
         PlayerPrefs.SetInt(PrefKey, 1);
         PlayerPrefs.Save();
 
-        yield return new WaitForSecondsRealtime(segundosAntesDeCargar);
+        yield return EsperarSalida();
 
         if (Application.CanStreamedLevelBeLoaded(escenaSiguiente))
             SceneManager.LoadScene(escenaSiguiente);
@@ -232,9 +256,17 @@ public class OnboardingManager : MonoBehaviour
             Debug.LogWarning($"[Onboarding] La escena '{escenaSiguiente}' no está en Build Profiles todavía.");
     }
 
-    static void Decir(string t)
+    void Decir(string texto, AudioClip voz, AudioClip efecto = null)
     {
-        if (NOVA.Instance != null) NOVA.Instance.Say(t);
+        if (nova != null) nova.Say(texto, voz, efecto);
+    }
+
+    void CerrarLocucion(string texto, AudioClip voz, AudioClip efecto)
+    {
+        if (nova == null) return;
+        nova.DetenerAmbiente();
+        nova.Limpiar();
+        Decir(texto, voz, efecto);
     }
 
     [ContextMenu("Borrar bandera de onboarding")]
