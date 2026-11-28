@@ -89,6 +89,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         reloj.IniciarCapitulo(capitulo.tiempoSegundos);
         poseeCuenta = true;
         matraz.ErrorDosis += AvisarNova;
+        matraz.CargaVertida += bobina.ApagarEfectosAmpolla;
         bobina.CargaInterrumpida += AvisarCargaInterrumpida;
         foreach (var ampolla in FindObjectsByType<ChemicalContainer>(FindObjectsInactive.Include))
         {
@@ -336,6 +337,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         reloj.OnChapterTimeUp -= AgotarTiempo;
         reloj.DetenerCapitulo();
         socketMatraz.enabled = false;
+        bobina.ApagarEfectosAmpolla();
         bobina.enabled = false;
         CambiarPaso(resultado, mensaje);
         audioFlash?.Terminar(resultado == Paso.Final);
@@ -365,6 +367,7 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
         ultimoPasoJugado = (int)paso;
         paso = nuevo;
         aviso = mensaje;
+        bobina.MostrarEfectosDePaso(nuevo == Paso.Bobina);
     }
 
     string FormatearTiempo() => TimerManager.Formato(Mathf.Ceil(reloj.CapituloRestante));
@@ -491,7 +494,11 @@ public class FlashNivel : MonoBehaviour, IXRSelectFilter
 
     void OnDestroy()
     {
-        if (matraz != null) matraz.ErrorDosis -= AvisarNova;
+        if (matraz != null)
+        {
+            matraz.ErrorDosis -= AvisarNova;
+            if (bobina != null) matraz.CargaVertida -= bobina.ApagarEfectosAmpolla;
+        }
         if (bobina != null) bobina.CargaInterrumpida -= AvisarCargaInterrumpida;
         foreach (var ampolla in ampollasObservadas)
             if (ampolla != null) ampolla.selectExited.RemoveListener(AlSoltarAmpolla);
