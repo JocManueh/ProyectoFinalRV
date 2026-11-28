@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98aa040eeb3e3a0498e2d203c4166f93, type: 3}
   m_Name: Chemical_ADN_Arana
   m_EditorClassIdentifier: Assembly-CSharp::ChemicalSO
-  id: 
-  displayName: 
-  symbol: 
+  id: arana
+  displayName: "Ara\xF1a"
+  symbol: ADN
   type: 0
   hazardNote: 
-  color: {r: 1, g: 1, b: 1, a: 1}
+  color: {r: 0.8980392, g: 0.22352941, b: 0.20784314, a: 1}
   requiresProcessing: 0

@@ -1,9 +1,8 @@
 /*
- * DESCRIPCIÓN: Controla la zona de encaje (socket) del matraz de mezclas. Verifica que 
- * las ampollas insertadas contengan líquido; si una ampolla está vacía, la rechaza y 
- * dispara una alerta visual (luz roja), sonora, táctil y resta puntos por error E1.
- * AMPLIADO: registra el orden de inserción y expone ObtenerMezcla() para RecipeValidator.
- *           Valida orden (E5) y cantidad (E4) si se asigna una RecipeSO.
+ * DESCRIPCIÓN: Controla la zona de encaje (socket) del matraz de mezclas. Rechaza ampollas
+ * vacías (E1) y, si se asigna una RecipeSO, valida sustancia, orden y cantidad al insertar
+ * (E3/E4/E5). Expone Completa() y el historial para RecipeValidator, que queda como
+ * comprobación final sin volver a registrar esos errores.
  */
 using System.Collections;
 using System.Collections.Generic;
@@ -23,11 +22,24 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
 
     [Header("Validación de receta (opcional)")]
     [SerializeField] RecipeSO receta;
-    [SerializeField] Renderer liquidoVisual; // cilindro que sube y cambia de color
-    [SerializeField] float alturaMaxLiquido = 0.08f; // escala Y máxima del cilindro
+    [SerializeField] Transform liquido; // cilindro con pivote en la base
+    [SerializeField] Renderer liquidoRenderer;
+    [SerializeField] float alturaMax = 0.12f;
 
-    // Historial de inserciones en orden
+    // Campos históricos: se mantienen para no romper CrearEscenaCap1 / Test_Cap1.
+    [SerializeField] Renderer liquidoVisual;
+    [SerializeField] float alturaMaxLiquido = 0.08f;
+
+    // Estado de la receta
     readonly List<RecipeStep> mezcla = new List<RecipeStep>();
+    int paso;
+    int enPaso;
+    int totalInsertadas;
+    int totalNecesarias;
+    ChemicalSO ultimaSustancia;
+
+    /// <summary>True solo cuando hay receta no vacía y se insertaron todas sus ampollas.</summary>
+    public bool Completa => receta != null && receta.steps.Count > 0 && paso >= receta.steps.Count;
 
     XRSocketInteractor socket;
     Color colorBase;
@@ -40,6 +52,13 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
     {
         socket = GetComponent<XRSocketInteractor>();
         if (piloto != null) colorBase = piloto.material.color;
+
+        totalNecesarias = 0;
+        if (receta != null)
+            foreach (var step in receta.steps)
+                if (step != null) totalNecesarias += Mathf.Max(0, step.ampollas);
+
+        ActualizarNivel();
     }
 
     void OnEnable()
@@ -61,30 +80,64 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
     {
         var ampolla = interactable.transform.GetComponent<ChemicalContainer>();
         if (ampolla == null) return true; // no es ampolla: otras reglas deciden
-        if (!ampolla.EstaVacia) return true; // llena: se acepta
 
-        AvisarVacia();
-        return false; // vacía: RECHAZADA
+        if (ampolla.EstaVacia)
+        {
+            Rechazar(ErrorCode.E1_Vacio, "Esa ampolla está vacía. Busca una que tenga contenido.");
+            return false;
+        }
+
+        // Sin receta (o receta vacía) el matraz no valida nada y acepta todo.
+        if (receta == null || receta.steps.Count == 0) return true;
+
+        if (Completa)
+        {
+            Rechazar(ErrorCode.E4_Cantidad, "El matraz ya está completo. No añadas más ampollas.");
+            return false;
+        }
+
+        var sustancia = ampolla.sustancia;
+        var esperada = receta.steps[paso].chemical;
+        if (esperada != null && sustancia == esperada) return true;
+
+        if (!PerteneceAReceta(sustancia))
+            Rechazar(ErrorCode.E3_Incorrecto, $"{Nombre(sustancia)} no está en la receta.");
+        else if (ultimaSustancia != null && sustancia == ultimaSustancia)
+            Rechazar(ErrorCode.E4_Cantidad, $"Ya añadiste la cantidad de {Nombre(sustancia)} que pedía la receta.");
+        else
+            Rechazar(ErrorCode.E5_Orden, $"Orden incorrecto. Ahora toca {Nombre(esperada)}.");
+
+        return false;
     }
 
-    void AvisarVacia()
+    bool PerteneceAReceta(ChemicalSO sustancia)
     {
-        // Process se llama muchas veces por segundo: limitamos los avisos
+        foreach (var step in receta.steps)
+            if (step != null && step.chemical == sustancia) return true;
+        return false;
+    }
+
+    static string Nombre(ChemicalSO c)
+    {
+        if (c == null) return "sustancia desconocida";
+        return string.IsNullOrEmpty(c.displayName) ? c.name : c.displayName;
+    }
+
+    // Rechazo genérico: conserva el cooldown para no repetir la penalización.
+    void Rechazar(ErrorCode codigo, string mensaje)
+    {
         if (Time.unscaledTime - ultimoAviso < segundosEntreAvisos) return;
         ultimoAviso = Time.unscaledTime;
 
-        Debug.Log("[E1] Ampolla vacía rechazada por el matraz");
+        Debug.Log($"[{codigo}] {mensaje}");
         if (ScoreSystem.Instance != null)
-            ScoreSystem.Instance.RegisterError(ErrorCode.E1_Vacio, "Ampolla vacía en el matraz");
-
+            ScoreSystem.Instance.RegisterError(codigo, mensaje);
         if (audioSource != null)
             audioSource.PlayOneShot(SimpleTones.Beep(220f, 0.3f));
-
         if (HapticFeedback.Instance != null)
             HapticFeedback.Instance.Error();
-
         if (NOVA.Instance != null)
-            NOVA.Instance.Say("Esa ampolla está vacía. Busca una que tenga contenido.");
+            NOVA.Instance.Say(mensaje);
 
         StartCoroutine(ParpadeoRojo());
     }
@@ -103,29 +156,28 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
             audioSource.PlayOneShot(SimpleTones.Beep(880f, 0.12f));
         if (HapticFeedback.Instance != null) HapticFeedback.Instance.Suave();
 
-        // ── Registro de mezcla y validación de orden/cantidad ────────────────
-        var cont = args.interactableObject.transform.GetComponent<ChemicalContainer>();
-        if (cont == null || cont.sustancia == null) return;
+        var amp = args.interactableObject.transform.GetComponent<ChemicalContainer>();
+        if (amp == null || amp.sustancia == null) return;
+        var cont = amp;
 
         // Verificar si es un reactivo sin procesar (E2)
         if (cont.sustancia.requiresProcessing)
         {
-            Debug.Log($"[E2] {cont.sustancia.displayName} insertado sin procesar.");
+            Debug.Log($"[E2] {Nombre(cont.sustancia)} insertado sin procesar.");
             if (ScoreSystem.Instance != null)
-                ScoreSystem.Instance.RegisterError(ErrorCode.E2_SinProcesar,
-                    cont.sustancia.displayName);
+                ScoreSystem.Instance.RegisterError(ErrorCode.E2_SinProcesar, Nombre(cont.sustancia));
             if (NOVA.Instance != null)
-                NOVA.Instance.Say($"{cont.sustancia.displayName} requiere procesamiento previo.");
+                NOVA.Instance.Say($"{Nombre(cont.sustancia)} requiere procesamiento previo.");
             return;
         }
 
-        // Buscar si ya existe en la mezcla para acumular cantidad
+        // Historial en orden para RecipeValidator (red de seguridad al analizar).
         bool encontrado = false;
-        foreach (var paso in mezcla)
+        foreach (var pasoMezcla in mezcla)
         {
-            if (paso.chemical == cont.sustancia)
+            if (pasoMezcla.chemical == cont.sustancia)
             {
-                paso.ampollas++;
+                pasoMezcla.ampollas++;
                 encontrado = true;
                 break;
             }
@@ -133,58 +185,47 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
         if (!encontrado)
             mezcla.Add(new RecipeStep { chemical = cont.sustancia, ampollas = 1 });
 
-        // Validar orden si hay receta
-        if (receta != null)
-            ValidarOrden(cont.sustancia);
+        // Avance de la receta (Process ya rechazó lo que no toca).
+        if (receta != null && receta.steps.Count > 0 && !Completa)
+        {
+            var esperada = receta.steps[paso].chemical;
+            if (esperada == null || cont.sustancia == esperada)
+            {
+                ultimaSustancia = cont.sustancia;
+                totalInsertadas++;
+                enPaso++;
 
-        ActualizarLiquido();
-        Debug.Log($"[MixingFlask] Insertado: {cont.sustancia.displayName} (total mezcla: {mezcla.Count} tipos)");
+                if (enPaso >= Mathf.Max(1, receta.steps[paso].ampollas))
+                {
+                    paso++;
+                    enPaso = 0;
+                }
+                Debug.Log($"[MixingFlask] Insertado {Nombre(cont.sustancia)}: {totalInsertadas}/{totalNecesarias}");
+            }
+        }
+
+        if (liquidoRenderer != null)
+        {
+            var mat = Application.isPlaying ? liquidoRenderer.material : liquidoRenderer.sharedMaterial;
+            if (mat != null) mat.color = cont.sustancia.color;
+        }
+        ActualizarNivel();
+
+        amp.Vaciar();
+        Destroy(amp.gameObject, 0.5f);
     }
 
-    void ValidarOrden(ChemicalSO sustancia)
+    void ActualizarNivel()
     {
-        // El índice esperado es el número de tipos distintos ya en la mezcla - 1
-        int idxActual = mezcla.Count - 1;
-        if (idxActual >= receta.steps.Count) return;
+        if (liquido == null) return;
 
-        var pasoEsperado = receta.steps[idxActual];
-        if (pasoEsperado.chemical != sustancia)
-        {
-            Debug.Log($"[E5] Orden incorrecto: se esperaba {pasoEsperado.chemical?.displayName}, llegó {sustancia.displayName}");
-            if (ScoreSystem.Instance != null)
-                ScoreSystem.Instance.RegisterError(ErrorCode.E5_Orden,
-                    $"Esperado {pasoEsperado.chemical?.displayName}, recibido {sustancia.displayName}");
-            if (NOVA.Instance != null)
-                NOVA.Instance.Say($"Orden incorrecto. Primero añade {pasoEsperado.chemical?.displayName}.");
-        }
-    }
+        float fraccion = totalNecesarias > 0
+            ? Mathf.Clamp01((float)totalInsertadas / totalNecesarias)
+            : 0f;
 
-    void ActualizarLiquido()
-    {
-        if (liquidoVisual == null || receta == null) return;
-
-        int totalAmpollas = 0;
-        foreach (var p in mezcla) totalAmpollas += p.ampollas;
-
-        int totalEsperado = 0;
-        foreach (var s in receta.steps) totalEsperado += s.ampollas;
-        if (totalEsperado == 0) return;
-
-        float t = Mathf.Clamp01((float)totalAmpollas / totalEsperado);
-
-        // Subir nivel del líquido (escala Y)
-        var escala = liquidoVisual.transform.localScale;
-        escala.y = Mathf.Lerp(0.01f, alturaMaxLiquido, t);
-        liquidoVisual.transform.localScale = escala;
-
-        // Color: mezcla de colores de los reactivos insertados
-        Color colorMezcla = Color.black;
-        int n = 0;
-        foreach (var p in mezcla)
-        {
-            if (p.chemical != null) { colorMezcla += p.chemical.color; n++; }
-        }
-        if (n > 0) liquidoVisual.material.color = colorMezcla / n;
+        var escala = liquido.localScale;
+        escala.y = Mathf.Max(0.001f, fraccion * alturaMax);
+        liquido.localScale = escala;
     }
 
     void AlSacar(SelectExitEventArgs args) => Pintar(colorBase);
@@ -201,6 +242,10 @@ public class MixingFlask : MonoBehaviour, IXRSelectFilter
     public void LimpiarMezcla()
     {
         mezcla.Clear();
-        ActualizarLiquido();
+        paso = 0;
+        enPaso = 0;
+        totalInsertadas = 0;
+        ultimaSustancia = null;
+        ActualizarNivel();
     }
 }

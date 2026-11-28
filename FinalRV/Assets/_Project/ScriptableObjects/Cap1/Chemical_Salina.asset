@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98aa040eeb3e3a0498e2d203c4166f93, type: 3}
   m_Name: Chemical_Salina
   m_EditorClassIdentifier: Assembly-CSharp::ChemicalSO
-  id: 
-  displayName: 
-  symbol: 
+  id: salina
+  displayName: Salina
+  symbol: NaCl
   type: 0
   hazardNote: 
-  color: {r: 1, g: 1, b: 1, a: 1}
+  color: {r: 0.16078432, g: 0.7137255, b: 0.9647059, a: 1}
   requiresProcessing: 0

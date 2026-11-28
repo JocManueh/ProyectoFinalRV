@@ -29,6 +29,17 @@ public class RecipeValidator : MonoBehaviour
             return;
         }
 
+        // El matraz rechaza al insertar; aquí solo comprobamos que se haya llenado por completo.
+        if (matraz != null && receta.steps.Count > 0 && !matraz.Completa)
+        {
+            Debug.Log("[E4] Faltan ampollas al confirmar la mezcla");
+            if (ScoreSystem.Instance != null)
+                ScoreSystem.Instance.RegisterError(ErrorCode.E4_Cantidad, "Faltan ampollas");
+            if (NOVA.Instance != null)
+                NOVA.Instance.Say("Faltan ampollas en el matraz.");
+            return; // no continuar con la validación
+        }
+
         var resultado = EvalRecipe();
         UltimoResultado = resultado;
 

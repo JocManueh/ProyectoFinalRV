@@ -322,6 +322,7 @@ MonoBehaviour:
   sustancia: {fileID: 0}
   volumen: 10
   liquidoRenderer: {fileID: 6893750356779438046}
+  ocultarLiquidoAlVaciar: 0
   etiqueta: {fileID: 8375657236538601026}
   colorVacio: {r: 0.5, g: 0.5, b: 0.5, a: 1}
 --- !u!1 &5888990631950400755
@@ -352,7 +353,7 @@ RectTransform:
   m_GameObject: {fileID: 5888990631950400755}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.5132, y: 2.5132, z: 2.5132}
+  m_LocalScale: {x: 4.381726, y: 4.381726, z: 4.381726}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4812864197032820613}
