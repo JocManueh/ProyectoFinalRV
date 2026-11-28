@@ -15,6 +15,7 @@ public class TimerManager : MonoBehaviour
     public float GlobalRestante { get; private set; }
     public float CapituloRestante { get; private set; }
     public bool GlobalCorriendo { get; private set; }
+    public bool GlobalIniciado { get; private set; }
     public bool CapituloCorriendo { get; private set; }
     public bool Pausado { get; set; } // se usará al quitarse las gafas
 
@@ -67,6 +68,7 @@ public class TimerManager : MonoBehaviour
 
     public void IniciarGlobal()
     {
+        GlobalIniciado = true;
         GlobalRestante = segundosGlobal;
         GlobalCorriendo = true;
     }
