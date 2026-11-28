@@ -15,7 +15,7 @@ MonoBehaviour:
   id: cafeina
   displayName: "Cafe\xEDna"
   symbol: C8H10N4O2
-  type: 0
+  type: 1
   hazardNote: 
   color: {r: 0.9843137, g: 0.54901963, b: 0, a: 1}
   requiresProcessing: 0

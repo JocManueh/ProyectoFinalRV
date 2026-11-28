@@ -5764,6 +5764,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.061
       objectReference: {fileID: 0}
+    - target: {fileID: 5585879884439062451, guid: e08629245adec3f49a903fb57c2c0244, type: 3}
+      propertyPath: m_InteractionLayers.m_Bits
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8307,76 +8311,6 @@ MonoBehaviour:
   audioSpider: {fileID: 605741252}
   puntosPorTarea: 20
   escenaFlash: 02-Flash
---- !u!114 &605741252
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 605741249}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bc51d946fd0a4dc29414e1d929100b51, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::SpiderAudioController
-  fuente: {fileID: 880321299}
-  subtitulo: {fileID: 1126332762}
-  camara: {fileID: 1309862873}
-  analizador: {fileID: 839588812}
-  reloj: {fileID: 8300000, guid: 7d136e6b1e4aa6e4fa9cfd4e07e040c7, type: 3}
-  error: {fileID: 8300000, guid: 1f390c43632f6d94c82278030420b53c, type: 3}
-  confirmacion: {fileID: 8300000, guid: a5ccb140af1e0df489ba02ed10f7758d, type: 3}
-  lineas:
-  - voz: {fileID: 8300000, guid: d1b1f6fa2ec195649b5d1f53db47e7c0, type: 3}
-    subtitulo: "Esa ampolla está vacía. Busca una que tenga contenido."
-  - voz: {fileID: 8300000, guid: 6a8ddb334f24b2c4aaac39f608099197, type: 3}
-    subtitulo: "Esa sustancia necesita procesarse antes de usarla."
-  - voz: {fileID: 8300000, guid: 4f4cfc303d1239d4badd5a39319ce278, type: 3}
-    subtitulo: "Esa sustancia no está en la fórmula."
-  - voz: {fileID: 8300000, guid: 7af20083c004f144e8ef370e5f86d233, type: 3}
-    subtitulo: "Esa bandeja no corresponde. Revisa el tipo de la sustancia."
-  - voz: {fileID: 8300000, guid: 1ca82300ae04b6e4aa43a53904ae44b2, type: 3}
-    subtitulo: "Ya añadiste la cantidad necesaria de esa sustancia."
-  - voz: {fileID: 8300000, guid: 2f57d5b789d1b174f8bd19b6ce0cee9e, type: 3}
-    subtitulo: "Faltan ampollas en el matraz."
-  - voz: {fileID: 8300000, guid: 197653dd7730df045ad765f694f30bf4, type: 3}
-    subtitulo: "Orden incorrecto. Revisa la fórmula."
-  - voz: {fileID: 8300000, guid: 8a1c65caad36a4b41b81801931e9e351, type: 3}
-    subtitulo: "La mezcla es inestable. Ajusta la temperatura."
-  - voz: {fileID: 8300000, guid: fdc579fecc4abc94da2d9bcfb0ac9e1f, type: 3}
-    subtitulo: "Se acabó el tiempo. Revisemos qué falló."
-  - voz: {fileID: 8300000, guid: 5aa805a128171324b8017f997e761731, type: 3}
-    subtitulo: "Queda un minuto."
-  - voz: {fileID: 8300000, guid: c938d223797ff1e4e94caf8eb0b7b705, type: 3}
-    subtitulo: "Bienvenido, doctor. Necesitamos un suero arácnido. Inserta el cómic en el lector para descubrir la fórmula."
-  - voz: {fileID: 8300000, guid: 81bbbc55ae02feb4ebf47e7ebb12dc19, type: 3}
-    subtitulo: "Cómic leído. Revisa la tabla y toca las palabras clave para revelar las pistas."
-  - voz: {fileID: 8300000, guid: a2b8675fd9e6e8949a1d9a73aad7c592, type: 3}
-    subtitulo: "Entendido. La fórmula necesita algo de una araña. Clasifica los reactivos en su bandeja."
-  - voz: {fileID: 8300000, guid: 97b1ce7af6b6886449f35b07f7ee28d7, type: 3}
-    subtitulo: "Reactivos clasificados. Ahora extrae el ADN de la araña."
-  - voz: {fileID: 8300000, guid: 38ab815daa82c1e4e91f6ad0d1c96db5, type: 3}
-    subtitulo: "ADN de araña obtenido. Ya puedes usarlo en la mezcla."
-  - voz: {fileID: 8300000, guid: 0ef6cc1289c34e74a8297c993d87f64e, type: 3}
-    subtitulo: "Cámara abierta. No toques la fuente, usa las pinzas."
-  - voz: {fileID: 8300000, guid: 58451273584aa8d49b5750d7b36c0be9, type: 3}
-    subtitulo: "Bien. Llévalo al matraz. El tritio va siempre al final."
-  - voz: {fileID: 8300000, guid: 9c90c4eea47cb554cb6e0264cf1f64f7, type: 3}
-    subtitulo: "Mezcla completa. Mueve la palanca entre treinta y cinco y cuarenta grados."
-  - voz: {fileID: 8300000, guid: 62532092fff43574caf0e59522878ac6, type: 3}
-    subtitulo: "Reactor estable. Pulsa Analizar."
-  - voz: {fileID: 8300000, guid: ffce6b7b5dfab8f4590e6e1c393e7efd, type: 3}
-    subtitulo: "Suero arácnido listo. Misión cumplida, doctor."
-  - voz: {fileID: 8300000, guid: 0bc0fafe8a35f3d448eb0344e5df7022, type: 3}
-    subtitulo: "La fórmula falló. Inténtalo otra vez, doctor."
-  - voz: {fileID: 8300000, guid: 3b80b8688e171884bbc72a4e8c83bd80, type: 3}
-    subtitulo: "No toques el tritio con la mano. Es radiactivo, usa las pinzas."
-  - voz: {fileID: 8300000, guid: 6b1e0c590d7112f4f9322eff2a7088d8, type: 3}
-    subtitulo: "Mercurio, cloro y cafeína no van en la mezcla."
-  - voz: {fileID: 8300000, guid: 68b20b4e9f5af714b846cf0798b819cf, type: 3}
-    subtitulo: "Recuerda la fórmula, salina dos veces, ADN de araña una vez y, al final, el tritio."
-  - voz: {fileID: 8300000, guid: 12c8a9d8667f6e84c957c599476f823d, type: 3}
-    subtitulo: "La muestra quedó inestable. Revisa el reactor en el próximo intento."
 --- !u!4 &605741251
 Transform:
   m_ObjectHideFlags: 0
@@ -8392,6 +8326,76 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &605741252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605741249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc51d946fd0a4dc29414e1d929100b51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpiderAudioController
+  fuente: {fileID: 880321299}
+  subtitulo: {fileID: 0}
+  camara: {fileID: 1309862873}
+  analizador: {fileID: 839588812}
+  reloj: {fileID: 8300000, guid: 7d136e6b1e4aa6e4fa9cfd4e07e040c7, type: 3}
+  error: {fileID: 8300000, guid: 1f390c43632f6d94c82278030420b53c, type: 3}
+  confirmacion: {fileID: 8300000, guid: a5ccb140af1e0df489ba02ed10f7758d, type: 3}
+  lineas:
+  - voz: {fileID: 8300000, guid: d1b1f6fa2ec195649b5d1f53db47e7c0, type: 3}
+    subtitulo: "Esa ampolla est\xE1 vac\xEDa. Busca una que tenga contenido."
+  - voz: {fileID: 8300000, guid: 6a8ddb334f24b2c4aaac39f608099197, type: 3}
+    subtitulo: Esa sustancia necesita procesarse antes de usarla.
+  - voz: {fileID: 8300000, guid: 4f4cfc303d1239d4badd5a39319ce278, type: 3}
+    subtitulo: "Esa sustancia no est\xE1 en la f\xF3rmula."
+  - voz: {fileID: 8300000, guid: 7af20083c004f144e8ef370e5f86d233, type: 3}
+    subtitulo: Esa bandeja no corresponde. Revisa el tipo de la sustancia.
+  - voz: {fileID: 8300000, guid: 1ca82300ae04b6e4aa43a53904ae44b2, type: 3}
+    subtitulo: "Ya a\xF1adiste la cantidad necesaria de esa sustancia."
+  - voz: {fileID: 8300000, guid: 2f57d5b789d1b174f8bd19b6ce0cee9e, type: 3}
+    subtitulo: Faltan ampollas en el matraz.
+  - voz: {fileID: 8300000, guid: 197653dd7730df045ad765f694f30bf4, type: 3}
+    subtitulo: "Orden incorrecto. Revisa la f\xF3rmula."
+  - voz: {fileID: 8300000, guid: 8a1c65caad36a4b41b81801931e9e351, type: 3}
+    subtitulo: La mezcla es inestable. Ajusta la temperatura.
+  - voz: {fileID: 8300000, guid: fdc579fecc4abc94da2d9bcfb0ac9e1f, type: 3}
+    subtitulo: "Se acab\xF3 el tiempo. Revisemos qu\xE9 fall\xF3."
+  - voz: {fileID: 8300000, guid: 5aa805a128171324b8017f997e761731, type: 3}
+    subtitulo: Queda un minuto.
+  - voz: {fileID: 8300000, guid: c938d223797ff1e4e94caf8eb0b7b705, type: 3}
+    subtitulo: "Bienvenido, doctor. Necesitamos un suero ar\xE1cnido. Inserta el c\xF3mic en el lector para descubrir la f\xF3rmula."
+  - voz: {fileID: 8300000, guid: 81bbbc55ae02feb4ebf47e7ebb12dc19, type: 3}
+    subtitulo: "C\xF3mic le\xEDdo. Revisa la tabla y toca las palabras clave para revelar las pistas."
+  - voz: {fileID: 8300000, guid: a2b8675fd9e6e8949a1d9a73aad7c592, type: 3}
+    subtitulo: "Entendido. La f\xF3rmula necesita algo de una ara\xF1a. Clasifica los reactivos en su bandeja."
+  - voz: {fileID: 8300000, guid: 97b1ce7af6b6886449f35b07f7ee28d7, type: 3}
+    subtitulo: "Reactivos clasificados. Ahora extrae el ADN de la ara\xF1a."
+  - voz: {fileID: 8300000, guid: 38ab815daa82c1e4e91f6ad0d1c96db5, type: 3}
+    subtitulo: "ADN de ara\xF1a obtenido. Ya puedes usarlo en la mezcla."
+  - voz: {fileID: 8300000, guid: 0ef6cc1289c34e74a8297c993d87f64e, type: 3}
+    subtitulo: "C\xE1mara abierta. No toques la fuente, usa las pinzas."
+  - voz: {fileID: 8300000, guid: 58451273584aa8d49b5750d7b36c0be9, type: 3}
+    subtitulo: "Bien. Ll\xE9valo al matraz. El tritio va siempre al final."
+  - voz: {fileID: 8300000, guid: 9c90c4eea47cb554cb6e0264cf1f64f7, type: 3}
+    subtitulo: Mezcla completa. Mueve la palanca entre treinta y cinco y cuarenta grados.
+  - voz: {fileID: 8300000, guid: 62532092fff43574caf0e59522878ac6, type: 3}
+    subtitulo: Reactor estable. Pulsa Analizar.
+  - voz: {fileID: 8300000, guid: ffce6b7b5dfab8f4590e6e1c393e7efd, type: 3}
+    subtitulo: "Suero ar\xE1cnido listo. Misi\xF3n cumplida, doctor."
+  - voz: {fileID: 8300000, guid: 0bc0fafe8a35f3d448eb0344e5df7022, type: 3}
+    subtitulo: "La f\xF3rmula fall\xF3. Int\xE9ntalo otra vez, doctor."
+  - voz: {fileID: 8300000, guid: 3b80b8688e171884bbc72a4e8c83bd80, type: 3}
+    subtitulo: No toques el tritio con la mano. Es radiactivo, usa las pinzas.
+  - voz: {fileID: 8300000, guid: 6b1e0c590d7112f4f9322eff2a7088d8, type: 3}
+    subtitulo: "Mercurio, cloro y cafe\xEDna no van en la mezcla."
+  - voz: {fileID: 8300000, guid: 68b20b4e9f5af714b846cf0798b819cf, type: 3}
+    subtitulo: "Recuerda la f\xF3rmula, salina dos veces, ADN de ara\xF1a una vez y, al final, el tritio."
+  - voz: {fileID: 8300000, guid: 12c8a9d8667f6e84c957c599476f823d, type: 3}
+    subtitulo: "La muestra qued\xF3 inestable. Revisa el reactor en el pr\xF3ximo intento."
 --- !u!1 &608962279 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -7594077028999122691, guid: e3ab3270e0b468645b43506e835e51c6, type: 3}
@@ -16259,11 +16263,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
---- !u!114 &1126332762 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5863868565669467954, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
-  m_PrefabInstance: {fileID: 1126332759}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1126332760 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7047563403876681670, guid: 8e7cd0d53b1966a4da7066d06508affe, type: 3}
